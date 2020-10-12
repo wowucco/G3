@@ -10,6 +10,7 @@ import (
 	producttHttp "github.com/wowucco/G3/internal/product/delivery/http"
 	"github.com/wowucco/G3/internal/product/repository/psql"
 	productUC "github.com/wowucco/G3/internal/product/usecase"
+	"github.com/wowucco/G3/pkg/gqlgen/graph"
 	"log"
 	"net/http"
 	"os"
@@ -52,6 +53,7 @@ func (app *App) Run(port string) error {
 	api := router.Group("/api")
 
 	producttHttp.RegisterHTTPEndpoints(api, app.productUC)
+	graph.RegisterGraphql(api, app.productUC)
 
 	app.httpServer = &http.Server{
 		Addr:           "127.0.0.1:" + port,

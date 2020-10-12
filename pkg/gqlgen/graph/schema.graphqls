@@ -1,0 +1,107 @@
+# https://gqlgen.com/getting-started/
+
+type CharacteristicType {
+  id: Int!
+  name: String!
+  isCustom: Boolean!
+}
+
+type Characteristic {
+  id: Int!
+  name: String!
+  type: CharacteristicType!
+  unit: Unit
+}
+
+type CharacteristicValue {
+  id: Int!
+  value: String!
+  characteristic: Characteristic!
+}
+
+type Country {
+  id: Int!
+  name: String!
+}
+
+type Unit {
+  id: Int!
+  name: String!
+}
+
+type Price {
+  price: String!
+  salePrice: String
+  saleCount: Int
+  priceInCents: Int!
+  salePriceInCents: Int
+  currency: String!
+}
+
+type Brand {
+  id: Int!
+  name: String!
+  slug: String!
+}
+
+type Category {
+  id: Int!
+  name: String!
+  title: String!
+  descriptinon: String
+  slug: String!
+}
+
+type Group {
+  id: Int!
+  name: String!
+  description: String
+}
+
+type Photo {
+  id: Int!
+  isMain: Boolean!
+  sort: Int!
+  small: String!
+  thumb: String!
+}
+
+type Product {
+  id: Int!
+  name: String!
+  description: String
+  code: Int!
+  exist: Int!
+  status: Int!
+  price: Price!
+  brand: Brand
+  category: Category
+  group: Group!
+  country: Country
+  unit: Unit
+  mainPhoto: Photo
+  photos: [Photo]
+  values: [CharacteristicValue]
+}
+
+type Pages {
+  page: Int!
+  perPage: Int!
+  pageCount: Int!
+  totalCount: Int!
+  items: [Product!]
+}
+
+input getProductInput {
+  productId: Int!
+}
+
+input getProductsInput {
+  page: Int!
+  perPage:Int!
+}
+
+type Query {
+  product(input: getProductInput): Product!
+  products(input: getProductsInput): Pages!
+}
