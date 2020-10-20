@@ -94,6 +94,16 @@ type ComplexityRoot struct {
 		TotalCount func(childComplexity int) int
 	}
 
+	PagesWithGroup struct {
+		Group func(childComplexity int) int
+		Pages func(childComplexity int) int
+	}
+
+	PagesWithGroups struct {
+		Groups func(childComplexity int) int
+		Pages  func(childComplexity int) int
+	}
+
 	Photo struct {
 		ID     func(childComplexity int) int
 		IsMain func(childComplexity int) int
@@ -130,8 +140,31 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Product  func(childComplexity int, input *model.GetProductInput) int
-		Products func(childComplexity int, input *model.GetProductsInput) int
+		Popular                 func(childComplexity int, input *model.Page) int
+		PopularByProductGroup   func(childComplexity int, input *model.PageByID) int
+		PopularByProductsGroups func(childComplexity int, input *model.PageByIds) int
+		Product                 func(childComplexity int, input *model.ID) int
+		Products                func(childComplexity int, input *model.Page) int
+		ProductsByIds           func(childComplexity int, input *model.Ids) int
+		Related                 func(childComplexity int, input *model.ID) int
+		Sales                   func(childComplexity int, input *model.Page) int
+		Similar                 func(childComplexity int, input *model.ID) int
+	}
+
+	SimpleProduct struct {
+		Brand       func(childComplexity int) int
+		Category    func(childComplexity int) int
+		Code        func(childComplexity int) int
+		Country     func(childComplexity int) int
+		Description func(childComplexity int) int
+		Exist       func(childComplexity int) int
+		Group       func(childComplexity int) int
+		ID          func(childComplexity int) int
+		MainPhoto   func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Price       func(childComplexity int) int
+		Status      func(childComplexity int) int
+		Unit        func(childComplexity int) int
 	}
 
 	Unit struct {
@@ -141,8 +174,15 @@ type ComplexityRoot struct {
 }
 
 type QueryResolver interface {
-	Product(ctx context.Context, input *model.GetProductInput) (*model.Product, error)
-	Products(ctx context.Context, input *model.GetProductsInput) (*model.Pages, error)
+	Product(ctx context.Context, input *model.ID) (*model.Product, error)
+	Products(ctx context.Context, input *model.Page) (*model.Pages, error)
+	ProductsByIds(ctx context.Context, input *model.Ids) ([]*model.Product, error)
+	Popular(ctx context.Context, input *model.Page) (*model.Pages, error)
+	Sales(ctx context.Context, input *model.Page) (*model.Pages, error)
+	Similar(ctx context.Context, input *model.ID) ([]*model.Product, error)
+	Related(ctx context.Context, input *model.ID) ([]*model.Product, error)
+	PopularByProductGroup(ctx context.Context, input *model.PageByID) (*model.PagesWithGroup, error)
+	PopularByProductsGroups(ctx context.Context, input *model.PageByIds) (*model.PagesWithGroups, error)
 }
 
 type executableSchema struct {
@@ -356,6 +396,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Pages.TotalCount(childComplexity), true
 
+	case "PagesWithGroup.group":
+		if e.complexity.PagesWithGroup.Group == nil {
+			break
+		}
+
+		return e.complexity.PagesWithGroup.Group(childComplexity), true
+
+	case "PagesWithGroup.pages":
+		if e.complexity.PagesWithGroup.Pages == nil {
+			break
+		}
+
+		return e.complexity.PagesWithGroup.Pages(childComplexity), true
+
+	case "PagesWithGroups.groups":
+		if e.complexity.PagesWithGroups.Groups == nil {
+			break
+		}
+
+		return e.complexity.PagesWithGroups.Groups(childComplexity), true
+
+	case "PagesWithGroups.pages":
+		if e.complexity.PagesWithGroups.Pages == nil {
+			break
+		}
+
+		return e.complexity.PagesWithGroups.Pages(childComplexity), true
+
 	case "Photo.id":
 		if e.complexity.Photo.ID == nil {
 			break
@@ -538,6 +606,42 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Product.Values(childComplexity), true
 
+	case "Query.popular":
+		if e.complexity.Query.Popular == nil {
+			break
+		}
+
+		args, err := ec.field_Query_popular_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Popular(childComplexity, args["input"].(*model.Page)), true
+
+	case "Query.popularByProductGroup":
+		if e.complexity.Query.PopularByProductGroup == nil {
+			break
+		}
+
+		args, err := ec.field_Query_popularByProductGroup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PopularByProductGroup(childComplexity, args["input"].(*model.PageByID)), true
+
+	case "Query.popularByProductsGroups":
+		if e.complexity.Query.PopularByProductsGroups == nil {
+			break
+		}
+
+		args, err := ec.field_Query_popularByProductsGroups_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PopularByProductsGroups(childComplexity, args["input"].(*model.PageByIds)), true
+
 	case "Query.product":
 		if e.complexity.Query.Product == nil {
 			break
@@ -548,7 +652,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Product(childComplexity, args["input"].(*model.GetProductInput)), true
+		return e.complexity.Query.Product(childComplexity, args["input"].(*model.ID)), true
 
 	case "Query.products":
 		if e.complexity.Query.Products == nil {
@@ -560,7 +664,146 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Products(childComplexity, args["input"].(*model.GetProductsInput)), true
+		return e.complexity.Query.Products(childComplexity, args["input"].(*model.Page)), true
+
+	case "Query.productsByIds":
+		if e.complexity.Query.ProductsByIds == nil {
+			break
+		}
+
+		args, err := ec.field_Query_productsByIds_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ProductsByIds(childComplexity, args["input"].(*model.Ids)), true
+
+	case "Query.related":
+		if e.complexity.Query.Related == nil {
+			break
+		}
+
+		args, err := ec.field_Query_related_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Related(childComplexity, args["input"].(*model.ID)), true
+
+	case "Query.sales":
+		if e.complexity.Query.Sales == nil {
+			break
+		}
+
+		args, err := ec.field_Query_sales_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Sales(childComplexity, args["input"].(*model.Page)), true
+
+	case "Query.similar":
+		if e.complexity.Query.Similar == nil {
+			break
+		}
+
+		args, err := ec.field_Query_similar_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Similar(childComplexity, args["input"].(*model.ID)), true
+
+	case "SimpleProduct.brand":
+		if e.complexity.SimpleProduct.Brand == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.Brand(childComplexity), true
+
+	case "SimpleProduct.category":
+		if e.complexity.SimpleProduct.Category == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.Category(childComplexity), true
+
+	case "SimpleProduct.code":
+		if e.complexity.SimpleProduct.Code == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.Code(childComplexity), true
+
+	case "SimpleProduct.country":
+		if e.complexity.SimpleProduct.Country == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.Country(childComplexity), true
+
+	case "SimpleProduct.description":
+		if e.complexity.SimpleProduct.Description == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.Description(childComplexity), true
+
+	case "SimpleProduct.exist":
+		if e.complexity.SimpleProduct.Exist == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.Exist(childComplexity), true
+
+	case "SimpleProduct.group":
+		if e.complexity.SimpleProduct.Group == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.Group(childComplexity), true
+
+	case "SimpleProduct.id":
+		if e.complexity.SimpleProduct.ID == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.ID(childComplexity), true
+
+	case "SimpleProduct.mainPhoto":
+		if e.complexity.SimpleProduct.MainPhoto == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.MainPhoto(childComplexity), true
+
+	case "SimpleProduct.name":
+		if e.complexity.SimpleProduct.Name == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.Name(childComplexity), true
+
+	case "SimpleProduct.price":
+		if e.complexity.SimpleProduct.Price == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.Price(childComplexity), true
+
+	case "SimpleProduct.status":
+		if e.complexity.SimpleProduct.Status == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.Status(childComplexity), true
+
+	case "SimpleProduct.unit":
+		if e.complexity.SimpleProduct.Unit == nil {
+			break
+		}
+
+		return e.complexity.SimpleProduct.Unit(childComplexity), true
 
 	case "Unit.id":
 		if e.complexity.Unit.ID == nil {
@@ -712,6 +955,22 @@ type Product {
   values: [CharacteristicValue]
 }
 
+type SimpleProduct {
+  id: Int!
+  name: String!
+  description: String
+  code: Int!
+  exist: Int!
+  status: Int!
+  price: Price!
+  brand: Brand
+  category: Category
+  group: Group!
+  country: Country
+  unit: Unit
+  mainPhoto: Photo
+}
+
 type Pages {
   page: Int!
   perPage: Int!
@@ -720,43 +979,57 @@ type Pages {
   items: [Product!]
 }
 
-input getProductInput {
-  productId: Int!
+type PagesWithGroup {
+  pages: Pages!
+  group: Group!
 }
 
-input getProductsInput {
+type PagesWithGroups {
+  pages: Pages!
+  groups: [Group!]
+}
+
+input id {
+  id: Int!
+}
+
+input ids {
+  ids: [Int]!
+}
+
+input idWithLimit {
+  id: Int!
+  limit: Int!
+}
+
+input page {
+  page: Int!
+  perPage:Int!
+}
+
+input pageById {
+  id: Int!
+  page: Int!
+  perPage:Int!
+}
+
+input pageByIds {
+  ids: [Int]!
   page: Int!
   perPage:Int!
 }
 
 type Query {
-  product(input: getProductInput): Product!
-  products(input: getProductsInput): Pages!
-}
-
-#type Product struct {
-#ID 			int
-#Name 		string
-#Description string
-#Code 		int
-#Exist 		int
-#Status 		int
-#
-#Brand 		Brand
-#Category 	Category
-#Group		Group
-#Unit		Unit
-#Country 	Country
-#
-#Price 		Price
-#
-#Values []CharacteristicValue
-#
-#MainPhoto 	Photo
-#Photos 		[]Photo
-#
-#Meta 		Meta
-#}`, BuiltIn: false},
+  product(input: id): Product!
+  products(input: page): Pages!
+  productsByIds(input: ids): [Product]!
+  popular(input: page): Pages!
+  sales(input: page): Pages!
+  similar(input: id): [Product]!
+  related(input: id): [Product]!
+  popularByProductGroup(input: pageById): PagesWithGroup!
+  popularByProductsGroups(input: pageByIds): PagesWithGroups!
+}`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -779,13 +1052,73 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_popularByProductGroup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.PageByID
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOpageById2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPageByID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_popularByProductsGroups_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.PageByIds
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOpageByIds2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPageByIds(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_popular_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Page
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOpage2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPage(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_product_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.GetProductInput
+	var arg0 *model.ID
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOgetProductInput2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐGetProductInput(ctx, tmp)
+		arg0, err = ec.unmarshalOid2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_productsByIds_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Ids
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOids2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐIds(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -797,10 +1130,55 @@ func (ec *executionContext) field_Query_product_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_products_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.GetProductsInput
+	var arg0 *model.Page
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalOgetProductsInput2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐGetProductsInput(ctx, tmp)
+		arg0, err = ec.unmarshalOpage2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPage(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_related_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.ID
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOid2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_sales_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Page
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOpage2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPage(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_similar_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.ID
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOid2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1815,6 +2193,143 @@ func (ec *executionContext) _Pages_items(ctx context.Context, field graphql.Coll
 	return ec.marshalOProduct2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProductᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _PagesWithGroup_pages(ctx context.Context, field graphql.CollectedField, obj *model.PagesWithGroup) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PagesWithGroup",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Pages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Pages)
+	fc.Result = res
+	return ec.marshalNPages2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPages(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PagesWithGroup_group(ctx context.Context, field graphql.CollectedField, obj *model.PagesWithGroup) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PagesWithGroup",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Group, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Group)
+	fc.Result = res
+	return ec.marshalNGroup2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐGroup(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PagesWithGroups_pages(ctx context.Context, field graphql.CollectedField, obj *model.PagesWithGroups) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PagesWithGroups",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Pages, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Pages)
+	fc.Result = res
+	return ec.marshalNPages2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPages(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PagesWithGroups_groups(ctx context.Context, field graphql.CollectedField, obj *model.PagesWithGroups) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PagesWithGroups",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Groups, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Group)
+	fc.Result = res
+	return ec.marshalOGroup2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐGroupᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Photo_id(ctx context.Context, field graphql.CollectedField, obj *model.Photo) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2717,7 +3232,7 @@ func (ec *executionContext) _Query_product(ctx context.Context, field graphql.Co
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Product(rctx, args["input"].(*model.GetProductInput))
+		return ec.resolvers.Query().Product(rctx, args["input"].(*model.ID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2759,7 +3274,7 @@ func (ec *executionContext) _Query_products(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Products(rctx, args["input"].(*model.GetProductsInput))
+		return ec.resolvers.Query().Products(rctx, args["input"].(*model.Page))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2774,6 +3289,300 @@ func (ec *executionContext) _Query_products(ctx context.Context, field graphql.C
 	res := resTmp.(*model.Pages)
 	fc.Result = res
 	return ec.marshalNPages2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPages(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_productsByIds(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_productsByIds_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ProductsByIds(rctx, args["input"].(*model.Ids))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Product)
+	fc.Result = res
+	return ec.marshalNProduct2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_popular(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_popular_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Popular(rctx, args["input"].(*model.Page))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Pages)
+	fc.Result = res
+	return ec.marshalNPages2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPages(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_sales(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_sales_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Sales(rctx, args["input"].(*model.Page))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Pages)
+	fc.Result = res
+	return ec.marshalNPages2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPages(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_similar(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_similar_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Similar(rctx, args["input"].(*model.ID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Product)
+	fc.Result = res
+	return ec.marshalNProduct2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_related(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_related_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Related(rctx, args["input"].(*model.ID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Product)
+	fc.Result = res
+	return ec.marshalNProduct2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_popularByProductGroup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_popularByProductGroup_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PopularByProductGroup(rctx, args["input"].(*model.PageByID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PagesWithGroup)
+	fc.Result = res
+	return ec.marshalNPagesWithGroup2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPagesWithGroup(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_popularByProductsGroups(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_popularByProductsGroups_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PopularByProductsGroups(rctx, args["input"].(*model.PageByIds))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PagesWithGroups)
+	fc.Result = res
+	return ec.marshalNPagesWithGroups2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPagesWithGroups(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2845,6 +3654,443 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	res := resTmp.(*introspection.Schema)
 	fc.Result = res
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_id(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_name(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_description(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_code(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Code, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_exist(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Exist, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_status(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_price(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Price, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Price)
+	fc.Result = res
+	return ec.marshalNPrice2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPrice(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_brand(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Brand, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Brand)
+	fc.Result = res
+	return ec.marshalOBrand2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐBrand(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_category(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Category, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Category)
+	fc.Result = res
+	return ec.marshalOCategory2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐCategory(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_group(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Group, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Group)
+	fc.Result = res
+	return ec.marshalNGroup2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐGroup(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_country(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Country, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Country)
+	fc.Result = res
+	return ec.marshalOCountry2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐCountry(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_unit(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Unit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Unit)
+	fc.Result = res
+	return ec.marshalOUnit2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐUnit(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _SimpleProduct_mainPhoto(ctx context.Context, field graphql.CollectedField, obj *model.SimpleProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "SimpleProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MainPhoto, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Photo)
+	fc.Result = res
+	return ec.marshalOPhoto2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPhoto(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Unit_id(ctx context.Context, field graphql.CollectedField, obj *model.Unit) (ret graphql.Marshaler) {
@@ -4004,17 +5250,17 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputgetProductInput(ctx context.Context, obj interface{}) (model.GetProductInput, error) {
-	var it model.GetProductInput
+func (ec *executionContext) unmarshalInputid(ctx context.Context, obj interface{}) (model.ID, error) {
+	var it model.ID
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
 		switch k {
-		case "productId":
+		case "id":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("productId"))
-			it.ProductID, err = ec.unmarshalNInt2int(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4024,12 +5270,132 @@ func (ec *executionContext) unmarshalInputgetProductInput(ctx context.Context, o
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputgetProductsInput(ctx context.Context, obj interface{}) (model.GetProductsInput, error) {
-	var it model.GetProductsInput
+func (ec *executionContext) unmarshalInputidWithLimit(ctx context.Context, obj interface{}) (model.IDWithLimit, error) {
+	var it model.IDWithLimit
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
 		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "limit":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+			it.Limit, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputids(ctx context.Context, obj interface{}) (model.Ids, error) {
+	var it model.Ids
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "ids":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			it.Ids, err = ec.unmarshalNInt2ᚕᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputpage(ctx context.Context, obj interface{}) (model.Page, error) {
+	var it model.Page
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "page":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+			it.Page, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "perPage":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perPage"))
+			it.PerPage, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputpageById(ctx context.Context, obj interface{}) (model.PageByID, error) {
+	var it model.PageByID
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "page":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("page"))
+			it.Page, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "perPage":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("perPage"))
+			it.PerPage, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputpageByIds(ctx context.Context, obj interface{}) (model.PageByIds, error) {
+	var it model.PageByIds
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "ids":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			it.Ids, err = ec.unmarshalNInt2ᚕᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "page":
 			var err error
 
@@ -4364,6 +5730,67 @@ func (ec *executionContext) _Pages(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
+var pagesWithGroupImplementors = []string{"PagesWithGroup"}
+
+func (ec *executionContext) _PagesWithGroup(ctx context.Context, sel ast.SelectionSet, obj *model.PagesWithGroup) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pagesWithGroupImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PagesWithGroup")
+		case "pages":
+			out.Values[i] = ec._PagesWithGroup_pages(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "group":
+			out.Values[i] = ec._PagesWithGroup_group(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var pagesWithGroupsImplementors = []string{"PagesWithGroups"}
+
+func (ec *executionContext) _PagesWithGroups(ctx context.Context, sel ast.SelectionSet, obj *model.PagesWithGroups) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, pagesWithGroupsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PagesWithGroups")
+		case "pages":
+			out.Values[i] = ec._PagesWithGroups_pages(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "groups":
+			out.Values[i] = ec._PagesWithGroups_groups(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var photoImplementors = []string{"Photo"}
 
 func (ec *executionContext) _Photo(ctx context.Context, sel ast.SelectionSet, obj *model.Photo) graphql.Marshaler {
@@ -4570,10 +5997,177 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "productsByIds":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_productsByIds(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "popular":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_popular(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "sales":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_sales(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "similar":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_similar(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "related":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_related(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "popularByProductGroup":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_popularByProductGroup(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "popularByProductsGroups":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_popularByProductsGroups(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
 			out.Values[i] = ec._Query___schema(ctx, field)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var simpleProductImplementors = []string{"SimpleProduct"}
+
+func (ec *executionContext) _SimpleProduct(ctx context.Context, sel ast.SelectionSet, obj *model.SimpleProduct) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, simpleProductImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SimpleProduct")
+		case "id":
+			out.Values[i] = ec._SimpleProduct_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._SimpleProduct_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+			out.Values[i] = ec._SimpleProduct_description(ctx, field, obj)
+		case "code":
+			out.Values[i] = ec._SimpleProduct_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "exist":
+			out.Values[i] = ec._SimpleProduct_exist(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "status":
+			out.Values[i] = ec._SimpleProduct_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "price":
+			out.Values[i] = ec._SimpleProduct_price(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "brand":
+			out.Values[i] = ec._SimpleProduct_brand(ctx, field, obj)
+		case "category":
+			out.Values[i] = ec._SimpleProduct_category(ctx, field, obj)
+		case "group":
+			out.Values[i] = ec._SimpleProduct_group(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "country":
+			out.Values[i] = ec._SimpleProduct_country(ctx, field, obj)
+		case "unit":
+			out.Values[i] = ec._SimpleProduct_unit(ctx, field, obj)
+		case "mainPhoto":
+			out.Values[i] = ec._SimpleProduct_mainPhoto(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4922,6 +6516,36 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) unmarshalNInt2ᚕᚖint(ctx context.Context, v interface{}) ([]*int, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*int, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOInt2ᚖint(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNInt2ᚕᚖint(ctx context.Context, sel ast.SelectionSet, v []*int) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOInt2ᚖint(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNPages2githubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPages(ctx context.Context, sel ast.SelectionSet, v model.Pages) graphql.Marshaler {
 	return ec._Pages(ctx, sel, &v)
 }
@@ -4936,6 +6560,34 @@ func (ec *executionContext) marshalNPages2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkg�
 	return ec._Pages(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNPagesWithGroup2githubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPagesWithGroup(ctx context.Context, sel ast.SelectionSet, v model.PagesWithGroup) graphql.Marshaler {
+	return ec._PagesWithGroup(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPagesWithGroup2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPagesWithGroup(ctx context.Context, sel ast.SelectionSet, v *model.PagesWithGroup) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._PagesWithGroup(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPagesWithGroups2githubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPagesWithGroups(ctx context.Context, sel ast.SelectionSet, v model.PagesWithGroups) graphql.Marshaler {
+	return ec._PagesWithGroups(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNPagesWithGroups2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPagesWithGroups(ctx context.Context, sel ast.SelectionSet, v *model.PagesWithGroups) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._PagesWithGroups(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNPrice2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPrice(ctx context.Context, sel ast.SelectionSet, v *model.Price) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -4948,6 +6600,43 @@ func (ec *executionContext) marshalNPrice2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkg�
 
 func (ec *executionContext) marshalNProduct2githubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx context.Context, sel ast.SelectionSet, v model.Product) graphql.Marshaler {
 	return ec._Product(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNProduct2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx context.Context, sel ast.SelectionSet, v []*model.Product) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOProduct2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalNProduct2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx context.Context, sel ast.SelectionSet, v *model.Product) graphql.Marshaler {
@@ -5296,6 +6985,46 @@ func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkg
 	return ec._Country(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOGroup2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐGroupᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Group) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNGroup2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐGroup(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
 	if v == nil {
 		return nil, nil
@@ -5396,6 +7125,13 @@ func (ec *executionContext) marshalOProduct2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋ
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalOProduct2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx context.Context, sel ast.SelectionSet, v *model.Product) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Product(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
@@ -5603,19 +7339,43 @@ func (ec *executionContext) marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 	return ec.___Type(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOgetProductInput2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐGetProductInput(ctx context.Context, v interface{}) (*model.GetProductInput, error) {
+func (ec *executionContext) unmarshalOid2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐID(ctx context.Context, v interface{}) (*model.ID, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputgetProductInput(ctx, v)
+	res, err := ec.unmarshalInputid(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOgetProductsInput2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐGetProductsInput(ctx context.Context, v interface{}) (*model.GetProductsInput, error) {
+func (ec *executionContext) unmarshalOids2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐIds(ctx context.Context, v interface{}) (*model.Ids, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputgetProductsInput(ctx, v)
+	res, err := ec.unmarshalInputids(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOpage2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPage(ctx context.Context, v interface{}) (*model.Page, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputpage(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOpageById2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPageByID(ctx context.Context, v interface{}) (*model.PageByID, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputpageById(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOpageByIds2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPageByIds(ctx context.Context, v interface{}) (*model.PageByIds, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputpageByIds(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

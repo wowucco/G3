@@ -8,4 +8,5 @@ import "github.com/wowucco/G3/internal/product"
 
 type Resolver struct{
 	useCase product.UseCase
+	productRead product.ReadRepository
 }

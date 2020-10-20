@@ -54,6 +54,16 @@ type Pages struct {
 	Items      []*Product `json:"items"`
 }
 
+type PagesWithGroup struct {
+	Pages *Pages `json:"pages"`
+	Group *Group `json:"group"`
+}
+
+type PagesWithGroups struct {
+	Pages  *Pages   `json:"pages"`
+	Groups []*Group `json:"groups"`
+}
+
 type Photo struct {
 	ID     int    `json:"id"`
 	IsMain bool   `json:"isMain"`
@@ -89,16 +99,53 @@ type Product struct {
 	Values      []*CharacteristicValue `json:"values"`
 }
 
+type SimpleProduct struct {
+	ID          int       `json:"id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
+	Code        int       `json:"code"`
+	Exist       int       `json:"exist"`
+	Status      int       `json:"status"`
+	Price       *Price    `json:"price"`
+	Brand       *Brand    `json:"brand"`
+	Category    *Category `json:"category"`
+	Group       *Group    `json:"group"`
+	Country     *Country  `json:"country"`
+	Unit        *Unit     `json:"unit"`
+	MainPhoto   *Photo    `json:"mainPhoto"`
+}
+
 type Unit struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
 
-type GetProductInput struct {
-	ProductID int `json:"productId"`
+type ID struct {
+	ID int `json:"id"`
 }
 
-type GetProductsInput struct {
+type IDWithLimit struct {
+	ID    int `json:"id"`
+	Limit int `json:"limit"`
+}
+
+type Ids struct {
+	Ids []*int `json:"ids"`
+}
+
+type Page struct {
 	Page    int `json:"page"`
 	PerPage int `json:"perPage"`
+}
+
+type PageByID struct {
+	ID      int `json:"id"`
+	Page    int `json:"page"`
+	PerPage int `json:"perPage"`
+}
+
+type PageByIds struct {
+	Ids     []*int `json:"ids"`
+	Page    int    `json:"page"`
+	PerPage int    `json:"perPage"`
 }

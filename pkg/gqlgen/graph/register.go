@@ -8,10 +8,10 @@ import (
 	"github.com/wowucco/G3/pkg/gqlgen/graph/generated"
 )
 
-func RegisterGraphql(router *gin.RouterGroup, uc product.UseCase)  {
+func RegisterGraphql(router *gin.RouterGroup, uc product.UseCase, r product.ReadRepository)  {
 	//srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{useCase: uc}}))
 
-	cnf := generated.Config{Resolvers: &Resolver{useCase: uc}}
+	cnf := generated.Config{Resolvers: &Resolver{useCase: uc, productRead: r}}
 
 	gql := router.Group("/graphql")
 	{

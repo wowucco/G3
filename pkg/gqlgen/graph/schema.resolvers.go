@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/wowucco/G3/internal/entity"
 	"github.com/wowucco/G3/pkg/gqlgen/graph/generated"
@@ -12,13 +13,13 @@ import (
 	"github.com/wowucco/G3/pkg/pagination"
 )
 
-func (r *queryResolver) Product(ctx context.Context, input *model.GetProductInput) (*model.Product, error) {
-	p, _ := r.useCase.Get(ctx, input.ProductID)
+func (r *queryResolver) Product(ctx context.Context, input *model.ID) (*model.Product, error) {
+	p, _ := r.useCase.Get(ctx, input.ID)
 
 	return toProduct(p), nil
 }
 
-func (r *queryResolver) Products(ctx context.Context, input *model.GetProductsInput) (*model.Pages, error) {
+func (r *queryResolver) Products(ctx context.Context, input *model.Page) (*model.Pages, error) {
 	count, _ := r.useCase.Count(ctx)
 
 	pages := pagination.New(input.Page, input.PerPage, count)
@@ -31,6 +32,128 @@ func (r *queryResolver) Products(ctx context.Context, input *model.GetProductsIn
 		PageCount:  pages.PageCount,
 		TotalCount: pages.TotalCount,
 		Items:      toProducts(ps),
+	}, nil
+}
+
+func (r *queryResolver) ProductsByIds(ctx context.Context, input *model.Ids) ([]*model.Product, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) Popular(ctx context.Context, input *model.Page) (*model.Pages, error) {
+	count, _ := r.productRead.GetPopularCount(ctx)
+
+	pages := pagination.New(input.Page, input.PerPage, count)
+
+	ps, _ := r.productRead.GetPopular(ctx, pages.Offset(), pages.Limit())
+
+	return &model.Pages{
+		Page:       pages.Page,
+		PerPage:    pages.PerPage,
+		PageCount:  pages.PageCount,
+		TotalCount: pages.TotalCount,
+		Items:      toProducts(ps),
+	}, nil
+}
+
+func (r *queryResolver) Sales(ctx context.Context, input *model.Page) (*model.Pages, error) {
+	count, _ := r.productRead.GetTopSalesCount(ctx)
+
+	pages := pagination.New(input.Page, input.PerPage, count)
+
+	ps, _ := r.productRead.GetTopSales(ctx, pages.Offset(), pages.Limit())
+
+	return &model.Pages{
+		Page:       pages.Page,
+		PerPage:    pages.PerPage,
+		PageCount:  pages.PageCount,
+		TotalCount: pages.TotalCount,
+		Items:      toProducts(ps),
+	}, nil
+}
+
+func (r *queryResolver) Similar(ctx context.Context, input *model.ID) ([]*model.Product, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) Related(ctx context.Context, input *model.ID) ([]*model.Product, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) PopularByProductGroup(ctx context.Context, input *model.PageByID) (*model.PagesWithGroup, error) {
+
+	group, err := r.productRead.GetGroupByProductId(ctx, input.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	count, _ := r.productRead.GetPopularByGroupIdCount(ctx, group.ID)
+
+	pages := pagination.New(input.Page, input.PerPage, count)
+
+	ps, _ := r.productRead.GetPopularByGroupId(ctx, group.ID, pages.Offset(), pages.Limit())
+
+	return &model.PagesWithGroup{
+		Pages: &model.Pages{
+			Page:       pages.Page,
+			PerPage:    pages.PerPage,
+			PageCount:  pages.PageCount,
+			TotalCount: pages.TotalCount,
+			Items:      toProducts(ps),
+		},
+		Group: &model.Group{
+			ID:          group.ID,
+			Name:        group.Name,
+			Description: &group.Description,
+		},
+	}, nil
+}
+
+func (r *queryResolver) PopularByProductsGroups(ctx context.Context, input *model.PageByIds) (*model.PagesWithGroups, error) {
+
+	ids := make([]int, len(input.Ids))
+
+	for k, v := range input.Ids {
+		ids[k] = *v
+	}
+
+	groups, err := r.productRead.GetGroupsByProductIds(ctx, ids)
+
+	if err != nil {
+		return nil, err
+	}
+
+	groupIds := make([]int, len(groups))
+
+	for k, v := range groups {
+		groupIds[k] = v.ID
+	}
+
+	count, _ := r.productRead.GetPopularByGroupIdsCount(ctx, groupIds)
+
+	pages := pagination.New(input.Page, input.PerPage, count)
+
+	ps, _ := r.productRead.GetPopularByGroupIds(ctx, groupIds, pages.Offset(), pages.Limit())
+
+	groutRows := make([]*model.Group, len(groups))
+
+	for k, v := range groups {
+		groutRows[k] = &model.Group{
+			ID:          v.ID,
+			Name:        v.Name,
+			Description: &v.Description,
+		}
+	}
+
+	return &model.PagesWithGroups{
+		Pages: &model.Pages{
+			Page:       pages.Page,
+			PerPage:    pages.PerPage,
+			PageCount:  pages.PageCount,
+			TotalCount: pages.TotalCount,
+			Items:      toProducts(ps),
+		},
+		Groups: groutRows,
 	}, nil
 }
 

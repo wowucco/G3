@@ -84,6 +84,22 @@ type Product {
   values: [CharacteristicValue]
 }
 
+type SimpleProduct {
+  id: Int!
+  name: String!
+  description: String
+  code: Int!
+  exist: Int!
+  status: Int!
+  price: Price!
+  brand: Brand
+  category: Category
+  group: Group!
+  country: Country
+  unit: Unit
+  mainPhoto: Photo
+}
+
 type Pages {
   page: Int!
   perPage: Int!
@@ -92,16 +108,54 @@ type Pages {
   items: [Product!]
 }
 
-input getProductInput {
-  productId: Int!
+type PagesWithGroup {
+  pages: Pages!
+  group: Group!
 }
 
-input getProductsInput {
+type PagesWithGroups {
+  pages: Pages!
+  groups: [Group!]
+}
+
+input id {
+  id: Int!
+}
+
+input ids {
+  ids: [Int]!
+}
+
+input idWithLimit {
+  id: Int!
+  limit: Int!
+}
+
+input page {
+  page: Int!
+  perPage:Int!
+}
+
+input pageById {
+  id: Int!
+  page: Int!
+  perPage:Int!
+}
+
+input pageByIds {
+  ids: [Int]!
   page: Int!
   perPage:Int!
 }
 
 type Query {
-  product(input: getProductInput): Product!
-  products(input: getProductsInput): Pages!
+  product(input: id): Product!
+  products(input: page): Pages!
+  productsByIds(input: ids): [Product]!
+  popular(input: page): Pages!
+  sales(input: page): Pages!
+  similar(input: id): [Product]!
+  related(input: id): [Product]!
+  popularByProductGroup(input: pageById): PagesWithGroup!
+  popularByProductsGroups(input: pageByIds): PagesWithGroups!
 }

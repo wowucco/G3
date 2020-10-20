@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	_ "github.com/lib/pq"
@@ -22,6 +24,7 @@ type App struct {
 	httpServer *http.Server
 
 	productUC product.UseCase
+	productRead product.ReadRepository
 
 	db *dbx.DB
 }
@@ -34,6 +37,7 @@ func NewApp() *App {
 		db: db,
 
 		productUC: productUC.NewProductUseCase(productRepo),
+		productRead: psql.NewProductReadRepository(db),
 	}
 }
 
@@ -53,7 +57,7 @@ func (app *App) Run(port string) error {
 	api := router.Group("/api")
 
 	producttHttp.RegisterHTTPEndpoints(api, app.productUC)
-	graph.RegisterGraphql(api, app.productUC)
+	graph.RegisterGraphql(api, app.productUC, app.productRead)
 
 	app.httpServer = &http.Server{
 		Addr:           "127.0.0.1:" + port,
@@ -92,5 +96,15 @@ func initDB()  *dbx.DB {
 		os.Exit(-1)
 	}
 
+	db.QueryLogFunc = logDBQuery
+
 	return db
+}
+
+func logDBQuery(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+	fmt.Print("\n>>>\n query: ", sql, "\n<<<\n")
+	fmt.Print("\n>>>\n duration: ", t, "\n<<<\n")
+	if err != nil {
+		fmt.Print("\n>>>\n error: ", err.Error(), "\n<<<\n")
+	}
 }
