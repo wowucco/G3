@@ -7,6 +7,8 @@ import (
 
 type ReadRepository interface {
 
+	GetByIdsWithSequence(ctx context.Context, ids []int) ([]*entity.Product, error)
+
 	GetPopularCount(ctx context.Context) (int, error)
 	GetPopular(ctx context.Context, offset, limit int) ([]*entity.Product, error)
 

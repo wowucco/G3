@@ -149,7 +149,7 @@ input pageByIds {
 }
 
 type Query {
-  product(input: id): Product!
+  product(input: id): Product
   products(input: page): Pages!
   productsByIds(input: ids): [Product]!
   popular(input: page): Pages!

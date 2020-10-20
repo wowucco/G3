@@ -46,9 +46,14 @@ func (r ProductRepository) Get(ctx context.Context, id int) (*entity.Product, er
 
 	if err != nil {
 		fmt.Print(err.Error())
+		return nil, err
 	}
 
 	product = rowToProductEntity(&row)
+
+	if product.ID == 0 {
+		return nil, fmt.Errorf("product %d not found", id)
+	}
 
 	ids := make([]interface{}, 1)
 	ids[0] = id

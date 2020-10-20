@@ -1020,7 +1020,7 @@ input pageByIds {
 }
 
 type Query {
-  product(input: id): Product!
+  product(input: id): Product
   products(input: page): Pages!
   productsByIds(input: ids): [Product]!
   popular(input: page): Pages!
@@ -3239,14 +3239,11 @@ func (ec *executionContext) _Query_product(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Product)
 	fc.Result = res
-	return ec.marshalNProduct2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+	return ec.marshalOProduct2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_products(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5978,9 +5975,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_product(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			})
 		case "products":
@@ -6596,10 +6590,6 @@ func (ec *executionContext) marshalNPrice2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkg�
 		return graphql.Null
 	}
 	return ec._Price(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNProduct2githubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx context.Context, sel ast.SelectionSet, v model.Product) graphql.Marshaler {
-	return ec._Product(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNProduct2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx context.Context, sel ast.SelectionSet, v []*model.Product) graphql.Marshaler {

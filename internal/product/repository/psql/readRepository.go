@@ -17,6 +17,56 @@ func NewProductReadRepository(db *dbx.DB) *ProductReadRepository {
 	}
 }
 
+func (r ProductReadRepository) GetByIdsWithSequence(ctx context.Context, ids []int) ([]*entity.Product, error) {
+
+	var (
+		rows []Product
+		sequence string
+	)
+
+	pIds := make([]interface{}, len(ids))
+
+	for k, v := range ids {
+		pIds[k] = v
+
+		if sequence != "" {
+			sequence += ","
+		}
+
+		sequence += fmt.Sprintf("(%d, %d)", k, v)
+	}
+
+	q := r.db.Select(
+		"b.id brand_id", "b.name brand_name", "b.slug brand_slug",
+		"c.id category_id", "c.name category_name", "c.description category_description", "c.title category_title", "c.slug category_slug",
+		"g.id group_id", "g.name group_name", "g.description group_description",
+		"cnt.id country_id", "cnt.name country_name",
+		"u.id unit_id", "u.name unit_name",
+		"ph.id photo_id", "ph.file photo_file", "ph.product_id photo_product_id", "ph.sort photo_sort",
+		"cr.id currency_id", "cr.name currency_name", "cr.rate currency_rate", "cr.iso currency_iso",
+		"p.*").
+	From(tableWithAlias(tableNameProduct, "p")).
+		LeftJoin(tableWithAlias(tableNameBrands, "b"), dbx.NewExp("p.brand_id = b.id")).
+		LeftJoin(tableWithAlias(tableNameCategories, "c"), dbx.NewExp("p.category_id = c.id")).
+		LeftJoin(tableWithAlias(tableNameCountry, "cnt"), dbx.NewExp("p.country_id = cnt.id")).
+		LeftJoin(tableWithAlias(tableNameProductUnit, "u"), dbx.NewExp("p.unit_id = u.id")).
+		LeftJoin(tableWithAlias(tableNamePhotos, "ph"), dbx.NewExp("p.main_photo_id = ph.id")).
+		LeftJoin(tableWithAlias(tableNameProductViewCount, "vc"), dbx.NewExp("p.id = vc.product_id")).
+		InnerJoin(tableWithAlias(tableNameGroup, "g"), dbx.NewExp("p.group_id = g.id")).
+		InnerJoin(tableWithAlias(tableNameCurrency, "cr"), dbx.NewExp("p.currency_id = cr.id")).
+	Where(dbx.NewExp("p.status={:status}", dbx.Params{"status": 1})).
+	Where(dbx.In("p.id", pIds...))
+
+	if sequence != "" {
+		q.InnerJoin(fmt.Sprintf("(values %s ) as last (ordering, id)", sequence), dbx.NewExp("p.id = last.id")).
+			OrderBy("last.ordering")
+	}
+
+	err := q.All(&rows)
+
+	return rowsToProductEntities(rows), err
+}
+
 func (r ProductReadRepository) GetPopularCount(ctx context.Context) (int, error) {
 
 	return r.enabledCount(ctx)

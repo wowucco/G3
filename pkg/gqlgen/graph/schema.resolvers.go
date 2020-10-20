@@ -14,7 +14,11 @@ import (
 )
 
 func (r *queryResolver) Product(ctx context.Context, input *model.ID) (*model.Product, error) {
-	p, _ := r.useCase.Get(ctx, input.ID)
+	p, e := r.useCase.Get(ctx, input.ID)
+
+	if e != nil {
+		return nil, e
+	}
 
 	return toProduct(p), nil
 }
@@ -36,7 +40,14 @@ func (r *queryResolver) Products(ctx context.Context, input *model.Page) (*model
 }
 
 func (r *queryResolver) ProductsByIds(ctx context.Context, input *model.Ids) ([]*model.Product, error) {
-	panic(fmt.Errorf("not implemented"))
+	ids := make([]int, len(input.Ids))
+	for k, v := range input.Ids {
+		ids[k] = *v
+	}
+
+	ps, err := r.productRead.GetByIdsWithSequence(ctx, ids)
+
+	return toProducts(ps), err
 }
 
 func (r *queryResolver) Popular(ctx context.Context, input *model.Page) (*model.Pages, error) {
@@ -80,7 +91,6 @@ func (r *queryResolver) Related(ctx context.Context, input *model.ID) ([]*model.
 }
 
 func (r *queryResolver) PopularByProductGroup(ctx context.Context, input *model.PageByID) (*model.PagesWithGroup, error) {
-
 	group, err := r.productRead.GetGroupByProductId(ctx, input.ID)
 
 	if err != nil {
@@ -110,7 +120,6 @@ func (r *queryResolver) PopularByProductGroup(ctx context.Context, input *model.
 }
 
 func (r *queryResolver) PopularByProductsGroups(ctx context.Context, input *model.PageByIds) (*model.PagesWithGroups, error) {
-
 	ids := make([]int, len(input.Ids))
 
 	for k, v := range input.Ids {
