@@ -1,0 +1,10 @@
+version: '3.6'
+
+services:
+  server:
+    image: g3
+    build:
+      context: .
+      dockerfile: cmd/api/Dockerfile
+    ports:
+      - "3030:3030"
