@@ -1,4 +1,5 @@
 FROM golang:alpine AS build
+
 RUN apk update && \
     apk add curl \
             git \
@@ -16,20 +17,17 @@ RUN go mod verify
 
 # copy source files and build the binary
 COPY . .
+RUN make build
 
-RUN go build -o api cmd/api/main.go
-
-RUN ls -la
 
 FROM alpine:latest
-RUN apk --no-cache add ca-certificates bash
+RUN apk --no-cache add ca-certificates bash curl
 RUN mkdir -p /var/log/app
 WORKDIR /app/
 
 COPY --from=build /app/api .
 COPY --from=build /app/cmd/api/entrypoint.sh .
 COPY --from=build /app/config/*.yml ./config/
-
 RUN ls -la
-
 ENTRYPOINT ["./entrypoint.sh"]
+
