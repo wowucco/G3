@@ -131,6 +131,10 @@ input idWithLimit {
   limit: Int!
 }
 
+input text {
+  text: String!
+}
+
 input page {
   page: Int!
   perPage:Int!
@@ -158,4 +162,5 @@ type Query {
   related(input: id): [Product]!
   popularByProductGroup(input: pageById): PagesWithGroup!
   popularByProductsGroups(input: pageByIds): PagesWithGroups!
+  search(input: text): [Product]!
 }

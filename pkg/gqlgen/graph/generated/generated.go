@@ -148,6 +148,7 @@ type ComplexityRoot struct {
 		ProductsByIds           func(childComplexity int, input *model.Ids) int
 		Related                 func(childComplexity int, input *model.ID) int
 		Sales                   func(childComplexity int, input *model.Page) int
+		Search                  func(childComplexity int, input *model.Text) int
 		Similar                 func(childComplexity int, input *model.ID) int
 	}
 
@@ -183,6 +184,7 @@ type QueryResolver interface {
 	Related(ctx context.Context, input *model.ID) ([]*model.Product, error)
 	PopularByProductGroup(ctx context.Context, input *model.PageByID) (*model.PagesWithGroup, error)
 	PopularByProductsGroups(ctx context.Context, input *model.PageByIds) (*model.PagesWithGroups, error)
+	Search(ctx context.Context, input *model.Text) ([]*model.Product, error)
 }
 
 type executableSchema struct {
@@ -702,6 +704,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Sales(childComplexity, args["input"].(*model.Page)), true
 
+	case "Query.search":
+		if e.complexity.Query.Search == nil {
+			break
+		}
+
+		args, err := ec.field_Query_search_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Search(childComplexity, args["input"].(*model.Text)), true
+
 	case "Query.similar":
 		if e.complexity.Query.Similar == nil {
 			break
@@ -1002,6 +1016,10 @@ input idWithLimit {
   limit: Int!
 }
 
+input text {
+  text: String!
+}
+
 input page {
   page: Int!
   perPage:Int!
@@ -1029,6 +1047,7 @@ type Query {
   related(input: id): [Product]!
   popularByProductGroup(input: pageById): PagesWithGroup!
   popularByProductsGroups(input: pageByIds): PagesWithGroups!
+  search(input: text): [Product]!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -1164,6 +1183,21 @@ func (ec *executionContext) field_Query_sales_args(ctx context.Context, rawArgs 
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOpage2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPage(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_search_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.Text
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOtext2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐText(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3582,6 +3616,48 @@ func (ec *executionContext) _Query_popularByProductsGroups(ctx context.Context, 
 	return ec.marshalNPagesWithGroups2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPagesWithGroups(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_search(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_search_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Search(rctx, args["input"].(*model.Text))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Product)
+	fc.Result = res
+	return ec.marshalNProduct2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5415,6 +5491,26 @@ func (ec *executionContext) unmarshalInputpageByIds(ctx context.Context, obj int
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputtext(ctx context.Context, obj interface{}) (model.Text, error) {
+	var it model.Text
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "text":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
+			it.Text, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -6084,6 +6180,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_popularByProductsGroups(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "search":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_search(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -7366,6 +7476,14 @@ func (ec *executionContext) unmarshalOpageByIds2ᚖgithubᚗcomᚋwowuccoᚋG3�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputpageByIds(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOtext2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐText(ctx context.Context, v interface{}) (*model.Text, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputtext(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

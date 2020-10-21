@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/elastic/go-elasticsearch/v5"
 	"github.com/gin-gonic/gin"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	_ "github.com/lib/pq"
@@ -27,17 +28,20 @@ type App struct {
 	productRead product.ReadRepository
 
 	db *dbx.DB
+	es *elasticsearch.Client
 }
 
 func NewApp() *App {
 	db := initDB()
+	es := initElasticsearch()
 	productRepo := psql.NewProductRepository(db)
 
 	return &App{
 		db: db,
+		es: es,
 
 		productUC: productUC.NewProductUseCase(productRepo),
-		productRead: psql.NewProductReadRepository(db),
+		productRead: psql.NewProductReadRepository(db, es),
 	}
 }
 
@@ -107,4 +111,20 @@ func logDBQuery(ctx context.Context, t time.Duration, sql string, rows *sql.Rows
 	if err != nil {
 		fmt.Print("\n>>>\n error: ", err.Error(), "\n<<<\n")
 	}
+}
+
+func initElasticsearch() *elasticsearch.Client {
+	cfg := elasticsearch.Config{
+		Addresses: []string{
+			viper.GetString("elasticsearch.host"),
+		},
+	}
+
+	es, err := elasticsearch.NewClient(cfg)
+
+	if err != nil {
+		log.Fatalf("Error creating the client: %s", err)
+	}
+
+	return es
 }

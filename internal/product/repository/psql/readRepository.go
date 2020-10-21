@@ -1,20 +1,69 @@
 package psql
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/elastic/go-elasticsearch/v5"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	"github.com/wowucco/G3/internal/entity"
+	"log"
+	"strings"
 )
 
 type ProductReadRepository struct {
 	db *dbx.DB
+	es *elasticsearch.Client
 }
 
-func NewProductReadRepository(db *dbx.DB) *ProductReadRepository {
+func NewProductReadRepository(db *dbx.DB, es *elasticsearch.Client) *ProductReadRepository {
 	return &ProductReadRepository{
 		db: db,
+		es: es,
 	}
+}
+
+func (r ProductReadRepository) GetById(ctx context.Context, id int, with []string) (*entity.Product, error) {
+
+	var (
+		row Product
+		product *entity.Product
+	)
+
+	err := r.db.Select(
+			"b.id brand_id", "b.name brand_name", "b.slug brand_slug",
+			"c.id category_id", "c.name category_name", "c.description category_description", "c.title category_title", "c.slug category_slug",
+			"g.id group_id", "g.name group_name", "g.description group_description",
+			"cnt.id country_id", "cnt.name country_name",
+			"u.id unit_id", "u.name unit_name",
+			"ph.id photo_id", "ph.file photo_file", "ph.product_id photo_product_id", "ph.sort photo_sort",
+			"cr.id currency_id", "cr.name currency_name", "cr.rate currency_rate", "cr.iso currency_iso",
+			"p.*").
+		From(tableWithAlias(tableNameProduct, "p")).
+			LeftJoin("shop_brands b", dbx.NewExp("p.brand_id = b.id")).
+			LeftJoin("shop_categories c", dbx.NewExp("p.category_id = c.id")).
+			LeftJoin("shop_country cnt", dbx.NewExp("p.country_id = cnt.id")).
+			LeftJoin("shop_products_unit u", dbx.NewExp("p.unit_id = u.id")).
+			LeftJoin("shop_photos ph", dbx.NewExp("p.main_photo_id = ph.id")).
+			InnerJoin("shop_group g", dbx.NewExp("p.group_id = g.id")).
+			InnerJoin("shop_currency cr", dbx.NewExp("p.currency_id = cr.id")).
+		Where(dbx.NewExp("p.id={:id}", dbx.Params{"id": id})).
+		One(&row)
+
+	if err != nil {
+		fmt.Print(err.Error())
+		return nil, err
+	}
+
+	product = rowToProductEntity(&row)
+
+	if product.ID == 0 {
+		return nil, fmt.Errorf("product %d not found", id)
+	}
+
+	return product, nil
 }
 
 func (r ProductReadRepository) GetByIdsWithSequence(ctx context.Context, ids []int) ([]*entity.Product, error) {
@@ -65,6 +114,123 @@ func (r ProductReadRepository) GetByIdsWithSequence(ctx context.Context, ids []i
 	err := q.All(&rows)
 
 	return rowsToProductEntities(rows), err
+}
+
+func (r ProductReadRepository) GetSimilar(ctx context.Context, p entity.Product, size int) ([]*entity.Product, error) {
+
+	var (
+		buf bytes.Buffer
+		split []string
+	)
+
+	name := strings.ToLower(p.Name)
+
+	split = strings.Split(name, " ")
+
+	should := make([]interface{}, len(split) + 1)
+
+	should[0] = map[string]interface{}{
+		"multi_match": map[string]interface{}{
+			"query": name,
+			"fields": []string{
+				"name",
+			},
+		},
+	}
+
+	for k, v := range split {
+		should[k+1] = map[string]interface{}{
+			"wildcard": map[string]string{
+				"name": "*" + v + "*",
+			},
+		}
+	}
+
+	q := map[string]interface{}{
+		"_source": []string{
+			"id",
+		},
+		"size": size,
+		"sort": []interface{}{
+			map[string]interface{}{
+				"_score": []interface{}{
+					map[string]string{
+						"order": "desc",
+					},
+				},
+			},
+		},
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"should": should,
+				"must_not": []interface{}{
+					map[string]interface{}{
+						"match": map[string]interface{}{
+							"id": p.ID,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := json.NewEncoder(&buf).Encode(q); err != nil {
+		log.Fatalf("Error encoding query: %s", err)
+		return nil, err
+	}
+
+	res, err := r.es.Search(
+		r.es.Search.WithContext(context.Background()),
+		r.es.Search.WithIndex("shop"),
+		r.es.Search.WithDocumentType("products"),
+		r.es.Search.WithBody(&buf),
+		r.es.Search.WithPretty(),
+	)
+
+	defer res.Body.Close()
+
+	if err != nil {
+		log.Fatalf("Error getting response: %s", err)
+		return nil, err
+	}
+
+	if res.IsError() {
+		var e map[string]interface{}
+		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
+			log.Fatalf("Error parsing the response body: %s", err)
+			return nil, err
+		} else {
+			// Print the response status and error information.
+			log.Fatalf("[%s] %s: %s",
+				res.Status(),
+				e["error"].(map[string]interface{})["type"],
+				e["error"].(map[string]interface{})["reason"],
+			)
+
+			return nil, errors.New(fmt.Sprintf("[%s] %s: %s", res.Status(),
+				e["error"].(map[string]interface{})["type"],
+				e["error"].(map[string]interface{})["reason"]))
+		}
+	}
+
+	var (
+		result map[string]interface{}
+	)
+
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		log.Fatalf("Error parsing the response body: %s", err)
+		return nil, err
+	}
+
+	i := 0
+	ids := make([]int, len(result["hits"].(map[string]interface{})["hits"].([]interface{})))
+
+	for _, hit := range result["hits"].(map[string]interface{})["hits"].([]interface{}) {
+		ids[i] = stringIdToInt(fmt.Sprintf("%v", hit.(map[string]interface{})["_id"]))
+		i++
+	}
+
+	return r.GetByIdsWithSequence(ctx, ids)
 }
 
 func (r ProductReadRepository) GetPopularCount(ctx context.Context) (int, error) {
@@ -302,4 +468,113 @@ func (r ProductReadRepository) GetGroupsByProductIds(ctx context.Context, produc
 	}
 
 	return groups, err
+}
+
+func (r ProductReadRepository) Search(ctx context.Context, input string, size int) ([]*entity.Product, error) {
+	var (
+		buf bytes.Buffer
+		split []string
+	)
+
+	name := strings.ToLower(input)
+	split = strings.Split(name, " ")
+
+	should := make([]interface{}, len(split) + 1)
+
+	should[0] = map[string]interface{}{
+		"multi_match": map[string]interface{}{
+			"query": name,
+			"fields": []string{
+				"name",
+			},
+		},
+	}
+
+	for k, v := range split {
+		should[k+1] = map[string]interface{}{
+			"wildcard": map[string]string{
+				"name": "*" + v + "*",
+			},
+		}
+	}
+
+	q := map[string]interface{}{
+		"_source": []string{
+			"id",
+		},
+		"size": size,
+		"sort": []interface{}{
+			map[string]interface{}{
+				"_score": []interface{}{
+					map[string]string{
+						"order": "desc",
+					},
+				},
+			},
+		},
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"should": should,
+			},
+		},
+	}
+
+	if err := json.NewEncoder(&buf).Encode(q); err != nil {
+		log.Fatalf("Error encoding query: %s", err)
+		return nil, err
+	}
+
+	res, err := r.es.Search(
+		r.es.Search.WithContext(context.Background()),
+		r.es.Search.WithIndex("shop"),
+		r.es.Search.WithDocumentType("products"),
+		r.es.Search.WithBody(&buf),
+		r.es.Search.WithPretty(),
+	)
+
+	defer res.Body.Close()
+
+	if err != nil {
+		log.Fatalf("Error getting response: %s", err)
+		return nil, err
+	}
+
+	if res.IsError() {
+		var e map[string]interface{}
+		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
+			log.Fatalf("Error parsing the response body: %s", err)
+			return nil, err
+		} else {
+			// Print the response status and error information.
+			log.Fatalf("[%s] %s: %s",
+				res.Status(),
+				e["error"].(map[string]interface{})["type"],
+				e["error"].(map[string]interface{})["reason"],
+			)
+
+			return nil, errors.New(fmt.Sprintf("[%s] %s: %s", res.Status(),
+				e["error"].(map[string]interface{})["type"],
+				e["error"].(map[string]interface{})["reason"]))
+		}
+	}
+
+	var (
+		result map[string]interface{}
+	)
+
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		log.Fatalf("Error parsing the response body: %s", err)
+		return nil, err
+	}
+
+	i := 0
+	ids := make([]int, len(result["hits"].(map[string]interface{})["hits"].([]interface{})))
+
+	for _, hit := range result["hits"].(map[string]interface{})["hits"].([]interface{}) {
+
+		ids[i] = stringIdToInt(fmt.Sprintf("%v", hit.(map[string]interface{})["_id"]))
+		i++
+	}
+
+	return r.GetByIdsWithSequence(ctx, ids)
 }

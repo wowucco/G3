@@ -83,7 +83,19 @@ func (r *queryResolver) Sales(ctx context.Context, input *model.Page) (*model.Pa
 }
 
 func (r *queryResolver) Similar(ctx context.Context, input *model.ID) ([]*model.Product, error) {
-	panic(fmt.Errorf("not implemented"))
+	var (
+		with []string
+	)
+
+	p, err := r.productRead.GetById(ctx, input.ID, with)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ps, err := r.productRead.GetSimilar(ctx, *p, 10)
+
+	return toProducts(ps), err
 }
 
 func (r *queryResolver) Related(ctx context.Context, input *model.ID) ([]*model.Product, error) {
@@ -164,6 +176,13 @@ func (r *queryResolver) PopularByProductsGroups(ctx context.Context, input *mode
 		},
 		Groups: groutRows,
 	}, nil
+}
+
+func (r *queryResolver) Search(ctx context.Context, input *model.Text) ([]*model.Product, error) {
+
+	ps, err := r.productRead.Search(ctx, input.Text, 10)
+
+	return toProducts(ps), err
 }
 
 // Query returns generated.QueryResolver implementation.

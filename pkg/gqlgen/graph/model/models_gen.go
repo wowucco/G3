@@ -149,3 +149,7 @@ type PageByIds struct {
 	Page    int    `json:"page"`
 	PerPage int    `json:"perPage"`
 }
+
+type Text struct {
+	Text string `json:"text"`
+}
