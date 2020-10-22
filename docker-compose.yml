@@ -9,4 +9,4 @@ services:
     volumes:
       - /tmp/app:/var/log/app
     ports:
-      - "8080:3030"
+      - 3003:3030

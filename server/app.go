@@ -64,7 +64,7 @@ func (app *App) Run(port string) error {
 	graph.RegisterGraphql(api, app.productUC, app.productRead)
 
 	app.httpServer = &http.Server{
-		Addr:           "127.0.0.1:" + port,
+		Addr:           fmt.Sprintf(":%v", port),
 		Handler:        router,
 	}
 
