@@ -27,7 +27,7 @@ WORKDIR /app/
 
 COPY --from=build /app/api .
 COPY --from=build /app/cmd/api/entrypoint.sh .
-COPY --from=build /app/config/*.yml ./config/
+COPY config/*.yml ./config/
 RUN ls -la
 ENTRYPOINT ["./entrypoint.sh"]
 

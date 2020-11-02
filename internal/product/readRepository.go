@@ -28,4 +28,5 @@ type ReadRepository interface {
 	GetGroupsByProductIds(ctx context.Context, productIds []int) ([]*entity.Group, error)
 
 	Search(ctx context.Context, input string, size int) ([]*entity.Product, error)
+	Exist(ctx context.Context, id int) (bool, error)
 }

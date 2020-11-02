@@ -100,6 +100,11 @@ type SimpleProduct {
   mainPhoto: Photo
 }
 
+type ExistProduct {
+  exist: Boolean!
+  id: Int!
+}
+
 type Pages {
   page: Int!
   perPage: Int!
@@ -163,4 +168,5 @@ type Query {
   popularByProductGroup(input: pageById): PagesWithGroup!
   popularByProductsGroups(input: pageByIds): PagesWithGroups!
   search(input: text): [Product]!
+  exist(input: id): ExistProduct!
 }

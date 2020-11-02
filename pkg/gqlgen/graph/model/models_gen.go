@@ -40,6 +40,11 @@ type Country struct {
 	Name string `json:"name"`
 }
 
+type ExistProduct struct {
+	Exist bool `json:"exist"`
+	ID    int  `json:"id"`
+}
+
 type Group struct {
 	ID          int     `json:"id"`
 	Name        string  `json:"name"`

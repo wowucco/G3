@@ -80,6 +80,11 @@ type ComplexityRoot struct {
 		Name func(childComplexity int) int
 	}
 
+	ExistProduct struct {
+		Exist func(childComplexity int) int
+		ID    func(childComplexity int) int
+	}
+
 	Group struct {
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -140,6 +145,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Exist                   func(childComplexity int, input *model.ID) int
 		Popular                 func(childComplexity int, input *model.Page) int
 		PopularByProductGroup   func(childComplexity int, input *model.PageByID) int
 		PopularByProductsGroups func(childComplexity int, input *model.PageByIds) int
@@ -185,6 +191,7 @@ type QueryResolver interface {
 	PopularByProductGroup(ctx context.Context, input *model.PageByID) (*model.PagesWithGroup, error)
 	PopularByProductsGroups(ctx context.Context, input *model.PageByIds) (*model.PagesWithGroups, error)
 	Search(ctx context.Context, input *model.Text) ([]*model.Product, error)
+	Exist(ctx context.Context, input *model.ID) (*model.ExistProduct, error)
 }
 
 type executableSchema struct {
@@ -341,6 +348,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Country.Name(childComplexity), true
+
+	case "ExistProduct.exist":
+		if e.complexity.ExistProduct.Exist == nil {
+			break
+		}
+
+		return e.complexity.ExistProduct.Exist(childComplexity), true
+
+	case "ExistProduct.id":
+		if e.complexity.ExistProduct.ID == nil {
+			break
+		}
+
+		return e.complexity.ExistProduct.ID(childComplexity), true
 
 	case "Group.description":
 		if e.complexity.Group.Description == nil {
@@ -607,6 +628,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Product.Values(childComplexity), true
+
+	case "Query.exist":
+		if e.complexity.Query.Exist == nil {
+			break
+		}
+
+		args, err := ec.field_Query_exist_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Exist(childComplexity, args["input"].(*model.ID)), true
 
 	case "Query.popular":
 		if e.complexity.Query.Popular == nil {
@@ -985,6 +1018,11 @@ type SimpleProduct {
   mainPhoto: Photo
 }
 
+type ExistProduct {
+  exist: Boolean!
+  id: Int!
+}
+
 type Pages {
   page: Int!
   perPage: Int!
@@ -1048,6 +1086,7 @@ type Query {
   popularByProductGroup(input: pageById): PagesWithGroup!
   popularByProductsGroups(input: pageByIds): PagesWithGroups!
   search(input: text): [Product]!
+  exist(input: id): ExistProduct!
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -1068,6 +1107,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_exist_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.ID
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOid2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -1951,6 +2005,76 @@ func (ec *executionContext) _Country_name(ctx context.Context, field graphql.Col
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ExistProduct_exist(ctx context.Context, field graphql.CollectedField, obj *model.ExistProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ExistProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Exist, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ExistProduct_id(ctx context.Context, field graphql.CollectedField, obj *model.ExistProduct) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ExistProduct",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Group_id(ctx context.Context, field graphql.CollectedField, obj *model.Group) (ret graphql.Marshaler) {
@@ -3656,6 +3780,48 @@ func (ec *executionContext) _Query_search(ctx context.Context, field graphql.Col
 	res := resTmp.([]*model.Product)
 	fc.Result = res
 	return ec.marshalNProduct2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_exist(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_exist_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Exist(rctx, args["input"].(*model.ID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ExistProduct)
+	fc.Result = res
+	return ec.marshalNExistProduct2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐExistProduct(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5745,6 +5911,38 @@ func (ec *executionContext) _Country(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var existProductImplementors = []string{"ExistProduct"}
+
+func (ec *executionContext) _ExistProduct(ctx context.Context, sel ast.SelectionSet, obj *model.ExistProduct) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, existProductImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ExistProduct")
+		case "exist":
+			out.Values[i] = ec._ExistProduct_exist(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "id":
+			out.Values[i] = ec._ExistProduct_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var groupImplementors = []string{"Group"}
 
 func (ec *executionContext) _Group(ctx context.Context, sel ast.SelectionSet, obj *model.Group) graphql.Marshaler {
@@ -6199,6 +6397,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "exist":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_exist(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -6593,6 +6805,20 @@ func (ec *executionContext) marshalNCharacteristicType2ᚖgithubᚗcomᚋwowucco
 		return graphql.Null
 	}
 	return ec._CharacteristicType(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNExistProduct2githubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐExistProduct(ctx context.Context, sel ast.SelectionSet, v model.ExistProduct) graphql.Marshaler {
+	return ec._ExistProduct(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNExistProduct2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐExistProduct(ctx context.Context, sel ast.SelectionSet, v *model.ExistProduct) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ExistProduct(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNGroup2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐGroup(ctx context.Context, sel ast.SelectionSet, v *model.Group) graphql.Marshaler {

@@ -179,10 +179,19 @@ func (r *queryResolver) PopularByProductsGroups(ctx context.Context, input *mode
 }
 
 func (r *queryResolver) Search(ctx context.Context, input *model.Text) ([]*model.Product, error) {
-
 	ps, err := r.productRead.Search(ctx, input.Text, 10)
 
 	return toProducts(ps), err
+}
+
+func (r *queryResolver) Exist(ctx context.Context, input *model.ID) (*model.ExistProduct, error) {
+
+	exist, err := r.productRead.Exist(ctx, input.ID)
+
+	return &model.ExistProduct{
+		Exist: exist,
+		ID:    input.ID,
+	}, err
 }
 
 // Query returns generated.QueryResolver implementation.

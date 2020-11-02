@@ -578,3 +578,14 @@ func (r ProductReadRepository) Search(ctx context.Context, input string, size in
 
 	return r.GetByIdsWithSequence(ctx, ids)
 }
+
+func (r ProductReadRepository) Exist(ctx context.Context, id int) (bool, error) {
+	var count int
+
+	err := r.db.Select("COUNT(*)").From(tableWithAlias(tableNameProduct, "p")).
+		Where(dbx.NewExp("p.status={:status}", dbx.Params{"status": 1})).
+		Where(dbx.NewExp("p.id={:id}", dbx.Params{"id": id})).
+		Row(&count)
+
+	return count > 0, err
+}
