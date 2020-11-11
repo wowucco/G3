@@ -1,5 +1,6 @@
 # https://gqlgen.com/getting-started/
 
+## product ##
 type CharacteristicType {
   id: Int!
   name: String!
@@ -157,6 +158,40 @@ input pageByIds {
   perPage:Int!
 }
 
+## menu ##
+type TreeMenuItem {
+  id: Int!
+  name: String!
+  description: String
+  image: String
+  parent: TreeParentMenuItem
+  children: [TreeChildrenMenuItem]
+  hasParent: Boolean!
+  hasChildren: Boolean!
+}
+
+type TreeParentMenuItem {
+  id: Int!
+  name: String!
+  image: String
+  parent: TreeParentMenuItem
+  hasParent: Boolean!
+}
+
+type TreeChildrenMenuItem {
+  id: Int!
+  name: String!
+  image: String
+  children: [TreeChildrenMenuItem]
+  hasChildren: Boolean!
+}
+
+input TreeMenu {
+  id: Int
+  depht: Int
+  parent: Boolean
+}
+
 type Query {
   product(input: id): Product
   products(input: page): Pages!
@@ -169,4 +204,6 @@ type Query {
   popularByProductsGroups(input: pageByIds): PagesWithGroups!
   search(input: text): [Product]!
   exist(input: id): ExistProduct!
+
+  treeMenu(input: TreeMenu): TreeMenuItem
 }

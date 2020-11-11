@@ -156,6 +156,7 @@ type ComplexityRoot struct {
 		Sales                   func(childComplexity int, input *model.Page) int
 		Search                  func(childComplexity int, input *model.Text) int
 		Similar                 func(childComplexity int, input *model.ID) int
+		TreeMenu                func(childComplexity int, input *model.TreeMenu) int
 	}
 
 	SimpleProduct struct {
@@ -172,6 +173,33 @@ type ComplexityRoot struct {
 		Price       func(childComplexity int) int
 		Status      func(childComplexity int) int
 		Unit        func(childComplexity int) int
+	}
+
+	TreeChildrenMenuItem struct {
+		Children    func(childComplexity int) int
+		HasChildren func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Image       func(childComplexity int) int
+		Name        func(childComplexity int) int
+	}
+
+	TreeMenuItem struct {
+		Children    func(childComplexity int) int
+		Description func(childComplexity int) int
+		HasChildren func(childComplexity int) int
+		HasParent   func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Image       func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Parent      func(childComplexity int) int
+	}
+
+	TreeParentMenuItem struct {
+		HasParent func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Image     func(childComplexity int) int
+		Name      func(childComplexity int) int
+		Parent    func(childComplexity int) int
 	}
 
 	Unit struct {
@@ -192,6 +220,7 @@ type QueryResolver interface {
 	PopularByProductsGroups(ctx context.Context, input *model.PageByIds) (*model.PagesWithGroups, error)
 	Search(ctx context.Context, input *model.Text) ([]*model.Product, error)
 	Exist(ctx context.Context, input *model.ID) (*model.ExistProduct, error)
+	TreeMenu(ctx context.Context, input *model.TreeMenu) (*model.TreeMenuItem, error)
 }
 
 type executableSchema struct {
@@ -761,6 +790,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Similar(childComplexity, args["input"].(*model.ID)), true
 
+	case "Query.treeMenu":
+		if e.complexity.Query.TreeMenu == nil {
+			break
+		}
+
+		args, err := ec.field_Query_treeMenu_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.TreeMenu(childComplexity, args["input"].(*model.TreeMenu)), true
+
 	case "SimpleProduct.brand":
 		if e.complexity.SimpleProduct.Brand == nil {
 			break
@@ -852,6 +893,132 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SimpleProduct.Unit(childComplexity), true
 
+	case "TreeChildrenMenuItem.children":
+		if e.complexity.TreeChildrenMenuItem.Children == nil {
+			break
+		}
+
+		return e.complexity.TreeChildrenMenuItem.Children(childComplexity), true
+
+	case "TreeChildrenMenuItem.hasChildren":
+		if e.complexity.TreeChildrenMenuItem.HasChildren == nil {
+			break
+		}
+
+		return e.complexity.TreeChildrenMenuItem.HasChildren(childComplexity), true
+
+	case "TreeChildrenMenuItem.id":
+		if e.complexity.TreeChildrenMenuItem.ID == nil {
+			break
+		}
+
+		return e.complexity.TreeChildrenMenuItem.ID(childComplexity), true
+
+	case "TreeChildrenMenuItem.image":
+		if e.complexity.TreeChildrenMenuItem.Image == nil {
+			break
+		}
+
+		return e.complexity.TreeChildrenMenuItem.Image(childComplexity), true
+
+	case "TreeChildrenMenuItem.name":
+		if e.complexity.TreeChildrenMenuItem.Name == nil {
+			break
+		}
+
+		return e.complexity.TreeChildrenMenuItem.Name(childComplexity), true
+
+	case "TreeMenuItem.children":
+		if e.complexity.TreeMenuItem.Children == nil {
+			break
+		}
+
+		return e.complexity.TreeMenuItem.Children(childComplexity), true
+
+	case "TreeMenuItem.description":
+		if e.complexity.TreeMenuItem.Description == nil {
+			break
+		}
+
+		return e.complexity.TreeMenuItem.Description(childComplexity), true
+
+	case "TreeMenuItem.hasChildren":
+		if e.complexity.TreeMenuItem.HasChildren == nil {
+			break
+		}
+
+		return e.complexity.TreeMenuItem.HasChildren(childComplexity), true
+
+	case "TreeMenuItem.hasParent":
+		if e.complexity.TreeMenuItem.HasParent == nil {
+			break
+		}
+
+		return e.complexity.TreeMenuItem.HasParent(childComplexity), true
+
+	case "TreeMenuItem.id":
+		if e.complexity.TreeMenuItem.ID == nil {
+			break
+		}
+
+		return e.complexity.TreeMenuItem.ID(childComplexity), true
+
+	case "TreeMenuItem.image":
+		if e.complexity.TreeMenuItem.Image == nil {
+			break
+		}
+
+		return e.complexity.TreeMenuItem.Image(childComplexity), true
+
+	case "TreeMenuItem.name":
+		if e.complexity.TreeMenuItem.Name == nil {
+			break
+		}
+
+		return e.complexity.TreeMenuItem.Name(childComplexity), true
+
+	case "TreeMenuItem.parent":
+		if e.complexity.TreeMenuItem.Parent == nil {
+			break
+		}
+
+		return e.complexity.TreeMenuItem.Parent(childComplexity), true
+
+	case "TreeParentMenuItem.hasParent":
+		if e.complexity.TreeParentMenuItem.HasParent == nil {
+			break
+		}
+
+		return e.complexity.TreeParentMenuItem.HasParent(childComplexity), true
+
+	case "TreeParentMenuItem.id":
+		if e.complexity.TreeParentMenuItem.ID == nil {
+			break
+		}
+
+		return e.complexity.TreeParentMenuItem.ID(childComplexity), true
+
+	case "TreeParentMenuItem.image":
+		if e.complexity.TreeParentMenuItem.Image == nil {
+			break
+		}
+
+		return e.complexity.TreeParentMenuItem.Image(childComplexity), true
+
+	case "TreeParentMenuItem.name":
+		if e.complexity.TreeParentMenuItem.Name == nil {
+			break
+		}
+
+		return e.complexity.TreeParentMenuItem.Name(childComplexity), true
+
+	case "TreeParentMenuItem.parent":
+		if e.complexity.TreeParentMenuItem.Parent == nil {
+			break
+		}
+
+		return e.complexity.TreeParentMenuItem.Parent(childComplexity), true
+
 	case "Unit.id":
 		if e.complexity.Unit.ID == nil {
 			break
@@ -918,6 +1085,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "graph/schema.graphqls", Input: `# https://gqlgen.com/getting-started/
 
+## product ##
 type CharacteristicType {
   id: Int!
   name: String!
@@ -1075,6 +1243,40 @@ input pageByIds {
   perPage:Int!
 }
 
+## menu ##
+type TreeMenuItem {
+  id: Int!
+  name: String!
+  description: String
+  image: String
+  parent: TreeParentMenuItem
+  children: [TreeChildrenMenuItem]
+  hasParent: Boolean!
+  hasChildren: Boolean!
+}
+
+type TreeParentMenuItem {
+  id: Int!
+  name: String!
+  image: String
+  parent: TreeParentMenuItem
+  hasParent: Boolean!
+}
+
+type TreeChildrenMenuItem {
+  id: Int!
+  name: String!
+  image: String
+  children: [TreeChildrenMenuItem]
+  hasChildren: Boolean!
+}
+
+input TreeMenu {
+  id: Int
+  depht: Int
+  parent: Boolean
+}
+
 type Query {
   product(input: id): Product
   products(input: page): Pages!
@@ -1087,6 +1289,8 @@ type Query {
   popularByProductsGroups(input: pageByIds): PagesWithGroups!
   search(input: text): [Product]!
   exist(input: id): ExistProduct!
+
+  treeMenu(input: TreeMenu): TreeMenuItem
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -1267,6 +1471,21 @@ func (ec *executionContext) field_Query_similar_args(ctx context.Context, rawArg
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOid2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_treeMenu_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.TreeMenu
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOTreeMenu2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeMenu(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3824,6 +4043,45 @@ func (ec *executionContext) _Query_exist(ctx context.Context, field graphql.Coll
 	return ec.marshalNExistProduct2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐExistProduct(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_treeMenu(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_treeMenu_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().TreeMenu(rctx, args["input"].(*model.TreeMenu))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.TreeMenuItem)
+	fc.Result = res
+	return ec.marshalOTreeMenuItem2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeMenuItem(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4330,6 +4588,612 @@ func (ec *executionContext) _SimpleProduct_mainPhoto(ctx context.Context, field 
 	res := resTmp.(*model.Photo)
 	fc.Result = res
 	return ec.marshalOPhoto2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPhoto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeChildrenMenuItem_id(ctx context.Context, field graphql.CollectedField, obj *model.TreeChildrenMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeChildrenMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeChildrenMenuItem_name(ctx context.Context, field graphql.CollectedField, obj *model.TreeChildrenMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeChildrenMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeChildrenMenuItem_image(ctx context.Context, field graphql.CollectedField, obj *model.TreeChildrenMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeChildrenMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Image, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeChildrenMenuItem_children(ctx context.Context, field graphql.CollectedField, obj *model.TreeChildrenMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeChildrenMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Children, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.TreeChildrenMenuItem)
+	fc.Result = res
+	return ec.marshalOTreeChildrenMenuItem2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeChildrenMenuItem(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeChildrenMenuItem_hasChildren(ctx context.Context, field graphql.CollectedField, obj *model.TreeChildrenMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeChildrenMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasChildren, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeMenuItem_id(ctx context.Context, field graphql.CollectedField, obj *model.TreeMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeMenuItem_name(ctx context.Context, field graphql.CollectedField, obj *model.TreeMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeMenuItem_description(ctx context.Context, field graphql.CollectedField, obj *model.TreeMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeMenuItem_image(ctx context.Context, field graphql.CollectedField, obj *model.TreeMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Image, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeMenuItem_parent(ctx context.Context, field graphql.CollectedField, obj *model.TreeMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Parent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.TreeParentMenuItem)
+	fc.Result = res
+	return ec.marshalOTreeParentMenuItem2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeParentMenuItem(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeMenuItem_children(ctx context.Context, field graphql.CollectedField, obj *model.TreeMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Children, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.TreeChildrenMenuItem)
+	fc.Result = res
+	return ec.marshalOTreeChildrenMenuItem2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeChildrenMenuItem(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeMenuItem_hasParent(ctx context.Context, field graphql.CollectedField, obj *model.TreeMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasParent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeMenuItem_hasChildren(ctx context.Context, field graphql.CollectedField, obj *model.TreeMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasChildren, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeParentMenuItem_id(ctx context.Context, field graphql.CollectedField, obj *model.TreeParentMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeParentMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeParentMenuItem_name(ctx context.Context, field graphql.CollectedField, obj *model.TreeParentMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeParentMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeParentMenuItem_image(ctx context.Context, field graphql.CollectedField, obj *model.TreeParentMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeParentMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Image, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeParentMenuItem_parent(ctx context.Context, field graphql.CollectedField, obj *model.TreeParentMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeParentMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Parent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.TreeParentMenuItem)
+	fc.Result = res
+	return ec.marshalOTreeParentMenuItem2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeParentMenuItem(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TreeParentMenuItem_hasParent(ctx context.Context, field graphql.CollectedField, obj *model.TreeParentMenuItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TreeParentMenuItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HasParent, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Unit_id(ctx context.Context, field graphql.CollectedField, obj *model.Unit) (ret graphql.Marshaler) {
@@ -5489,6 +6353,42 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputTreeMenu(ctx context.Context, obj interface{}) (model.TreeMenu, error) {
+	var it model.TreeMenu
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "depht":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("depht"))
+			it.Depht, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "parent":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parent"))
+			it.Parent, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputid(ctx context.Context, obj interface{}) (model.ID, error) {
 	var it model.ID
 	var asMap = obj.(map[string]interface{})
@@ -6411,6 +7311,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "treeMenu":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_treeMenu(ctx, field)
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -6484,6 +7395,138 @@ func (ec *executionContext) _SimpleProduct(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._SimpleProduct_unit(ctx, field, obj)
 		case "mainPhoto":
 			out.Values[i] = ec._SimpleProduct_mainPhoto(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var treeChildrenMenuItemImplementors = []string{"TreeChildrenMenuItem"}
+
+func (ec *executionContext) _TreeChildrenMenuItem(ctx context.Context, sel ast.SelectionSet, obj *model.TreeChildrenMenuItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, treeChildrenMenuItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TreeChildrenMenuItem")
+		case "id":
+			out.Values[i] = ec._TreeChildrenMenuItem_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._TreeChildrenMenuItem_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "image":
+			out.Values[i] = ec._TreeChildrenMenuItem_image(ctx, field, obj)
+		case "children":
+			out.Values[i] = ec._TreeChildrenMenuItem_children(ctx, field, obj)
+		case "hasChildren":
+			out.Values[i] = ec._TreeChildrenMenuItem_hasChildren(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var treeMenuItemImplementors = []string{"TreeMenuItem"}
+
+func (ec *executionContext) _TreeMenuItem(ctx context.Context, sel ast.SelectionSet, obj *model.TreeMenuItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, treeMenuItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TreeMenuItem")
+		case "id":
+			out.Values[i] = ec._TreeMenuItem_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._TreeMenuItem_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+			out.Values[i] = ec._TreeMenuItem_description(ctx, field, obj)
+		case "image":
+			out.Values[i] = ec._TreeMenuItem_image(ctx, field, obj)
+		case "parent":
+			out.Values[i] = ec._TreeMenuItem_parent(ctx, field, obj)
+		case "children":
+			out.Values[i] = ec._TreeMenuItem_children(ctx, field, obj)
+		case "hasParent":
+			out.Values[i] = ec._TreeMenuItem_hasParent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hasChildren":
+			out.Values[i] = ec._TreeMenuItem_hasChildren(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var treeParentMenuItemImplementors = []string{"TreeParentMenuItem"}
+
+func (ec *executionContext) _TreeParentMenuItem(ctx context.Context, sel ast.SelectionSet, obj *model.TreeParentMenuItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, treeParentMenuItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TreeParentMenuItem")
+		case "id":
+			out.Values[i] = ec._TreeParentMenuItem_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._TreeParentMenuItem_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "image":
+			out.Values[i] = ec._TreeParentMenuItem_image(ctx, field, obj)
+		case "parent":
+			out.Values[i] = ec._TreeParentMenuItem_parent(ctx, field, obj)
+		case "hasParent":
+			out.Values[i] = ec._TreeParentMenuItem_hasParent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7482,6 +8525,75 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return graphql.MarshalString(*v)
+}
+
+func (ec *executionContext) marshalOTreeChildrenMenuItem2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeChildrenMenuItem(ctx context.Context, sel ast.SelectionSet, v []*model.TreeChildrenMenuItem) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOTreeChildrenMenuItem2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeChildrenMenuItem(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalOTreeChildrenMenuItem2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeChildrenMenuItem(ctx context.Context, sel ast.SelectionSet, v *model.TreeChildrenMenuItem) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TreeChildrenMenuItem(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOTreeMenu2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeMenu(ctx context.Context, v interface{}) (*model.TreeMenu, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTreeMenu(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTreeMenuItem2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeMenuItem(ctx context.Context, sel ast.SelectionSet, v *model.TreeMenuItem) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TreeMenuItem(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOTreeParentMenuItem2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐTreeParentMenuItem(ctx context.Context, sel ast.SelectionSet, v *model.TreeParentMenuItem) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TreeParentMenuItem(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOUnit2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐUnit(ctx context.Context, sel ast.SelectionSet, v *model.Unit) graphql.Marshaler {

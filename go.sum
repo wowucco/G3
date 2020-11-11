@@ -259,6 +259,10 @@ github.com/vektah/dataloaden v0.2.1-0.20190515034641-a19b9a6e7c9e h1:+w0Zm/9gaWp
 github.com/vektah/dataloaden v0.2.1-0.20190515034641-a19b9a6e7c9e/go.mod h1:/HUdMve7rvxZma+2ZELQeNh88+003LL7Pf/CZ089j8U=
 github.com/vektah/gqlparser/v2 v2.1.0 h1:uiKJ+T5HMGGQM2kRKQ8Pxw8+Zq9qhhZhz/lieYvCMns=
 github.com/vektah/gqlparser/v2 v2.1.0/go.mod h1:SyUiHgLATUR8BiYURfTirrTcGpcE+4XkV2se04Px1Ms=
+github.com/wowucco/nestedset v0.0.0-20200522112206-2b33d9af934b h1:h3KnX35s+pZd7zI7ilkr6fNZ7LedGrgS1Ujcrgr8SeQ=
+github.com/wowucco/nestedset v0.0.0-20200522112206-2b33d9af934b/go.mod h1:AU5ukvWGeifNsOdezwBa9Pb1xel1do6lKhy9CTnm1bA=
+github.com/wowucco/nestedset v0.0.0-20201109230149-8d862ee4db27 h1:CQSC1ZpteK55g8pR9DOVmTkaOIxGXreQhkq47NgQT4o=
+github.com/wowucco/nestedset v0.0.0-20201109230149-8d862ee4db27/go.mod h1:AU5ukvWGeifNsOdezwBa9Pb1xel1do6lKhy9CTnm1bA=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=

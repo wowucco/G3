@@ -120,6 +120,39 @@ type SimpleProduct struct {
 	MainPhoto   *Photo    `json:"mainPhoto"`
 }
 
+type TreeChildrenMenuItem struct {
+	ID          int                     `json:"id"`
+	Name        string                  `json:"name"`
+	Image       *string                 `json:"image"`
+	Children    []*TreeChildrenMenuItem `json:"children"`
+	HasChildren bool                    `json:"hasChildren"`
+}
+
+type TreeMenu struct {
+	ID     *int  `json:"id"`
+	Depht  *int  `json:"depht"`
+	Parent *bool `json:"parent"`
+}
+
+type TreeMenuItem struct {
+	ID          int                     `json:"id"`
+	Name        string                  `json:"name"`
+	Description *string                 `json:"description"`
+	Image       *string                 `json:"image"`
+	Parent      *TreeParentMenuItem     `json:"parent"`
+	Children    []*TreeChildrenMenuItem `json:"children"`
+	HasParent   bool                    `json:"hasParent"`
+	HasChildren bool                    `json:"hasChildren"`
+}
+
+type TreeParentMenuItem struct {
+	ID        int                 `json:"id"`
+	Name      string              `json:"name"`
+	Image     *string             `json:"image"`
+	Parent    *TreeParentMenuItem `json:"parent"`
+	HasParent bool                `json:"hasParent"`
+}
+
 type Unit struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`

@@ -185,13 +185,61 @@ func (r *queryResolver) Search(ctx context.Context, input *model.Text) ([]*model
 }
 
 func (r *queryResolver) Exist(ctx context.Context, input *model.ID) (*model.ExistProduct, error) {
-
 	exist, err := r.productRead.Exist(ctx, input.ID)
 
 	return &model.ExistProduct{
 		Exist: exist,
 		ID:    input.ID,
 	}, err
+}
+
+func (r *queryResolver) TreeMenu(ctx context.Context, input *model.TreeMenu) (*model.TreeMenuItem, error) {
+
+	var (
+		depth int = 0
+		parent bool = false
+		id int = 0
+
+		e error
+		m *entity.MenuItem
+	)
+	fmt.Printf("\ninput: %v\n", input)
+
+	if input != nil {
+		if input.ID != nil {
+			id = *input.ID
+		}
+
+		if input.Depht != nil {
+			depth = *input.Depht
+		}
+
+		if input.Parent != nil {
+			parent = *input.Parent
+		}
+	}
+
+
+	if id > 0 {
+		m, e = r.menuRead.MenuItemWithDepthById(ctx, id, depth, parent)
+	} else {
+		m, e = r.menuRead.RootMenuItemWithDepth(ctx, depth)
+	}
+
+	if e != nil {
+		return nil, e
+	}
+
+	return &model.TreeMenuItem{
+		ID:          m.Id,
+		Name:        m.Name,
+		Description: &m.Description,
+		Image:       &m.Image,
+		Parent:      parentMenuItem(m.Parent),
+		Children:    childrenMenuItem(m.Children),
+		HasParent:   m.HasParent,
+		HasChildren: m.HasChildren,
+	}, e
 }
 
 // Query returns generated.QueryResolver implementation.
@@ -205,6 +253,53 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func parentMenuItem(parent *entity.ParentMenuItem) *model.TreeParentMenuItem {
+
+	if parent == nil {
+		return nil
+	}
+
+	row := model.TreeParentMenuItem{
+		ID:        parent.Id,
+		Name:      parent.Name,
+		Image:     &parent.Image,
+		HasParent: parent.HasParent,
+	}
+
+	if row.HasParent == true {
+		row.Parent = parentMenuItem(parent.Parent)
+	}
+
+	return &row
+}
+
+func childrenMenuItem(children []*entity.ChildrenMenuItem) []*model.TreeChildrenMenuItem {
+
+	ch := make([]*model.TreeChildrenMenuItem, len(children))
+
+	for k, v := range children {
+		ch[k] = childMenuItem(v)
+	}
+
+	return ch
+}
+
+func childMenuItem(child *entity.ChildrenMenuItem) *model.TreeChildrenMenuItem {
+
+	c := &model.TreeChildrenMenuItem{
+		ID:          child.Id,
+		Name:        child.Name,
+		Image:       &child.Image,
+		HasChildren: child.HasChildren,
+	}
+
+	if c.HasChildren && child.Children != nil {
+		c.Children = childrenMenuItem(child.Children)
+	}
+
+	return c
+}
+
 func toProducts(p []*entity.Product) []*model.Product {
 	products := make([]*model.Product, len(p))
 

@@ -9,9 +9,11 @@ import (
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
+	"github.com/wowucco/G3/internal/menu"
+	_menuRepo "github.com/wowucco/G3/internal/menu/repository/psql"
 	"github.com/wowucco/G3/internal/product"
 	producttHttp "github.com/wowucco/G3/internal/product/delivery/http"
-	"github.com/wowucco/G3/internal/product/repository/psql"
+	_productRepo "github.com/wowucco/G3/internal/product/repository/psql"
 	productUC "github.com/wowucco/G3/internal/product/usecase"
 	"github.com/wowucco/G3/pkg/gqlgen/graph"
 	"log"
@@ -26,6 +28,7 @@ type App struct {
 
 	productUC product.UseCase
 	productRead product.ReadRepository
+	menuRead menu.ReadRepository
 
 	db *dbx.DB
 	es *elasticsearch.Client
@@ -34,14 +37,15 @@ type App struct {
 func NewApp() *App {
 	db := initDB()
 	es := initElasticsearch()
-	productRepo := psql.NewProductRepository(db)
+	productRepo := _productRepo.NewProductRepository(db)
 
 	return &App{
 		db: db,
 		es: es,
 
 		productUC: productUC.NewProductUseCase(productRepo),
-		productRead: psql.NewProductReadRepository(db, es),
+		productRead: _productRepo.NewProductReadRepository(db, es),
+		menuRead: _menuRepo.NewMenuReadRepository(db),
 	}
 }
 
@@ -61,7 +65,7 @@ func (app *App) Run(port string) error {
 	api := router.Group("/api")
 
 	producttHttp.RegisterHTTPEndpoints(api, app.productUC)
-	graph.RegisterGraphql(api, app.productUC, app.productRead)
+	graph.RegisterGraphql(api, app.productUC, app.productRead, app.menuRead)
 
 	app.httpServer = &http.Server{
 		Addr:           fmt.Sprintf(":%v", port),

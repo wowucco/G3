@@ -1,6 +1,9 @@
 package graph
 
-import "github.com/wowucco/G3/internal/product"
+import (
+	"github.com/wowucco/G3/internal/menu"
+	"github.com/wowucco/G3/internal/product"
+)
 
 // This file will not be regenerated automatically.
 //
@@ -9,4 +12,5 @@ import "github.com/wowucco/G3/internal/product"
 type Resolver struct{
 	useCase product.UseCase
 	productRead product.ReadRepository
+	menuRead menu.ReadRepository
 }

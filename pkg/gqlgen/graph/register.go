@@ -4,14 +4,15 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-gonic/gin"
+	"github.com/wowucco/G3/internal/menu"
 	"github.com/wowucco/G3/internal/product"
 	"github.com/wowucco/G3/pkg/gqlgen/graph/generated"
 )
 
-func RegisterGraphql(router *gin.RouterGroup, uc product.UseCase, r product.ReadRepository)  {
+func RegisterGraphql(router *gin.RouterGroup, uc product.UseCase, r product.ReadRepository, m menu.ReadRepository)  {
 	//srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{useCase: uc}}))
 
-	cnf := generated.Config{Resolvers: &Resolver{useCase: uc, productRead: r}}
+	cnf := generated.Config{Resolvers: &Resolver{useCase: uc, productRead: r, menuRead: m}}
 
 	gql := router.Group("/graphql")
 	{

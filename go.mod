@@ -11,4 +11,5 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/vektah/gqlparser/v2 v2.1.0
+	github.com/wowucco/nestedset v0.0.0-20201109230149-8d862ee4db27
 )
