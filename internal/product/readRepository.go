@@ -29,4 +29,7 @@ type ReadRepository interface {
 
 	Search(ctx context.Context, input string, size int) ([]*entity.Product, error)
 	Exist(ctx context.Context, id int) (bool, error)
+
+	GetGroupById(ctx context.Context, id int) (*entity.Group, error)
+	GetGroupsByIds(ctx context.Context, ids []int) ([]*entity.Group, error)
 }

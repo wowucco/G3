@@ -196,6 +196,8 @@ type Query {
   product(input: id): Product
   products(input: page): Pages!
   productsByIds(input: ids): [Product]!
+  productsByGroupId(input: pageById): PagesWithGroup!
+  productsByGroupIds(input: pageByIds): PagesWithGroups!
   popular(input: page): Pages!
   sales(input: page): Pages!
   similar(input: id): [Product]!

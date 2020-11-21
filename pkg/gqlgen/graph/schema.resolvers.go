@@ -50,6 +50,82 @@ func (r *queryResolver) ProductsByIds(ctx context.Context, input *model.Ids) ([]
 	return toProducts(ps), err
 }
 
+func (r *queryResolver) ProductsByGroupID(ctx context.Context, input *model.PageByID) (*model.PagesWithGroup, error) {
+	group, err := r.productRead.GetGroupById(ctx, input.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	count, _ := r.productRead.GetPopularByGroupIdCount(ctx, group.ID)
+
+	pages := pagination.New(input.Page, input.PerPage, count)
+
+	ps, _ := r.productRead.GetPopularByGroupId(ctx, group.ID, pages.Offset(), pages.Limit())
+
+	return &model.PagesWithGroup{
+		Pages: &model.Pages{
+			Page:       pages.Page,
+			PerPage:    pages.PerPage,
+			PageCount:  pages.PageCount,
+			TotalCount: pages.TotalCount,
+			Items:      toProducts(ps),
+		},
+		Group: &model.Group{
+			ID:          group.ID,
+			Name:        group.Name,
+			Description: &group.Description,
+		},
+	}, nil
+}
+
+func (r *queryResolver) ProductsByGroupIds(ctx context.Context, input *model.PageByIds) (*model.PagesWithGroups, error) {
+	ids := make([]int, len(input.Ids))
+
+	for k, v := range input.Ids {
+		ids[k] = *v
+	}
+
+	groups, err := r.productRead.GetGroupsByIds(ctx, ids)
+
+	if err != nil {
+		return nil, err
+	}
+
+	groupIds := make([]int, len(groups))
+
+	for k, v := range groups {
+		groupIds[k] = v.ID
+	}
+
+	count, _ := r.productRead.GetPopularByGroupIdsCount(ctx, groupIds)
+
+	pages := pagination.New(input.Page, input.PerPage, count)
+
+	ps, _ := r.productRead.GetPopularByGroupIds(ctx, groupIds, pages.Offset(), pages.Limit())
+
+	groutRows := make([]*model.Group, len(groups))
+
+	for k, v := range groups {
+		groutRows[k] = &model.Group{
+			ID:          v.ID,
+			Name:        v.Name,
+			Description: &v.Description,
+		}
+	}
+
+	return &model.PagesWithGroups{
+		Pages: &model.Pages{
+			Page:       pages.Page,
+			PerPage:    pages.PerPage,
+			PageCount:  pages.PageCount,
+			TotalCount: pages.TotalCount,
+			Items:      toProducts(ps),
+		},
+		Groups: groutRows,
+	}, nil
+}
+
 func (r *queryResolver) Popular(ctx context.Context, input *model.Page) (*model.Pages, error) {
 	count, _ := r.productRead.GetPopularCount(ctx)
 
@@ -194,16 +270,14 @@ func (r *queryResolver) Exist(ctx context.Context, input *model.ID) (*model.Exis
 }
 
 func (r *queryResolver) TreeMenu(ctx context.Context, input *model.TreeMenu) (*model.TreeMenuItem, error) {
-
 	var (
-		depth int = 0
+		depth  int  = 0
 		parent bool = false
-		id int = 0
+		id     int  = 0
 
 		e error
 		m *entity.MenuItem
 	)
-	fmt.Printf("\ninput: %v\n", input)
 
 	if input != nil {
 		if input.ID != nil {
@@ -218,7 +292,6 @@ func (r *queryResolver) TreeMenu(ctx context.Context, input *model.TreeMenu) (*m
 			parent = *input.Parent
 		}
 	}
-
 
 	if id > 0 {
 		m, e = r.menuRead.MenuItemWithDepthById(ctx, id, depth, parent)
@@ -272,7 +345,6 @@ func parentMenuItem(parent *entity.ParentMenuItem) *model.TreeParentMenuItem {
 
 	return &row
 }
-
 func childrenMenuItem(children []*entity.ChildrenMenuItem) []*model.TreeChildrenMenuItem {
 
 	ch := make([]*model.TreeChildrenMenuItem, len(children))
@@ -283,7 +355,6 @@ func childrenMenuItem(children []*entity.ChildrenMenuItem) []*model.TreeChildren
 
 	return ch
 }
-
 func childMenuItem(child *entity.ChildrenMenuItem) *model.TreeChildrenMenuItem {
 
 	c := &model.TreeChildrenMenuItem{
@@ -299,7 +370,6 @@ func childMenuItem(child *entity.ChildrenMenuItem) *model.TreeChildrenMenuItem {
 
 	return c
 }
-
 func toProducts(p []*entity.Product) []*model.Product {
 	products := make([]*model.Product, len(p))
 

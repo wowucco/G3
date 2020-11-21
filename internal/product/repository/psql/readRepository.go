@@ -589,3 +589,61 @@ func (r ProductReadRepository) Exist(ctx context.Context, id int) (bool, error) 
 
 	return count > 0, err
 }
+
+func (r ProductReadRepository) GetGroupById(ctx context.Context, id int) (*entity.Group, error) {
+	var (
+		group Group
+	)
+
+	err := r.db.Select("g.id group_id", "g.name group_name", "g.description group_description").
+		From(tableWithAlias(tableNameGroup, "g")).
+		Where(dbx.NewExp("g.id={:id}", dbx.Params{"id": id})).
+		One(&group)
+
+
+	if err != nil {
+		fmt.Print(err.Error())
+		return nil, err
+	}
+
+	return &entity.Group{
+		ID: group.GroupID,
+		Name: group.GroupName,
+		Description: group.GroupDescription,
+	}, err
+}
+
+func (r ProductReadRepository) GetGroupsByIds(ctx context.Context, ids []int) ([]*entity.Group, error) {
+
+	var (
+		rows []Group
+	)
+
+	groupIds := make([]interface{}, len(ids))
+
+	for k, v := range ids {
+		groupIds[k] = v
+	}
+
+	err := r.db.Select("g.id group_id", "g.name group_name", "g.description group_description").
+		From(tableWithAlias(tableNameGroup, "g")).
+		Where(dbx.In("g.id", groupIds...)).
+		All(&rows)
+
+	if err != nil {
+		fmt.Print(err.Error())
+		return nil, err
+	}
+
+	groups := make([]*entity.Group, len(rows))
+
+	for k, v := range rows {
+		groups[k] = &entity.Group{
+			ID:          v.GroupID,
+			Name:        v.GroupName,
+			Description: v.GroupDescription,
+		}
+	}
+
+	return groups, err
+}

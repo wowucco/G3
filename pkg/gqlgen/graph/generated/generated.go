@@ -151,6 +151,8 @@ type ComplexityRoot struct {
 		PopularByProductsGroups func(childComplexity int, input *model.PageByIds) int
 		Product                 func(childComplexity int, input *model.ID) int
 		Products                func(childComplexity int, input *model.Page) int
+		ProductsByGroupID       func(childComplexity int, input *model.PageByID) int
+		ProductsByGroupIds      func(childComplexity int, input *model.PageByIds) int
 		ProductsByIds           func(childComplexity int, input *model.Ids) int
 		Related                 func(childComplexity int, input *model.ID) int
 		Sales                   func(childComplexity int, input *model.Page) int
@@ -212,6 +214,8 @@ type QueryResolver interface {
 	Product(ctx context.Context, input *model.ID) (*model.Product, error)
 	Products(ctx context.Context, input *model.Page) (*model.Pages, error)
 	ProductsByIds(ctx context.Context, input *model.Ids) ([]*model.Product, error)
+	ProductsByGroupID(ctx context.Context, input *model.PageByID) (*model.PagesWithGroup, error)
+	ProductsByGroupIds(ctx context.Context, input *model.PageByIds) (*model.PagesWithGroups, error)
 	Popular(ctx context.Context, input *model.Page) (*model.Pages, error)
 	Sales(ctx context.Context, input *model.Page) (*model.Pages, error)
 	Similar(ctx context.Context, input *model.ID) ([]*model.Product, error)
@@ -729,6 +733,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Products(childComplexity, args["input"].(*model.Page)), true
+
+	case "Query.productsByGroupId":
+		if e.complexity.Query.ProductsByGroupID == nil {
+			break
+		}
+
+		args, err := ec.field_Query_productsByGroupId_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ProductsByGroupID(childComplexity, args["input"].(*model.PageByID)), true
+
+	case "Query.productsByGroupIds":
+		if e.complexity.Query.ProductsByGroupIds == nil {
+			break
+		}
+
+		args, err := ec.field_Query_productsByGroupIds_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ProductsByGroupIds(childComplexity, args["input"].(*model.PageByIds)), true
 
 	case "Query.productsByIds":
 		if e.complexity.Query.ProductsByIds == nil {
@@ -1281,6 +1309,8 @@ type Query {
   product(input: id): Product
   products(input: page): Pages!
   productsByIds(input: ids): [Product]!
+  productsByGroupId(input: pageById): PagesWithGroup!
+  productsByGroupIds(input: pageByIds): PagesWithGroups!
   popular(input: page): Pages!
   sales(input: page): Pages!
   similar(input: id): [Product]!
@@ -1381,6 +1411,36 @@ func (ec *executionContext) field_Query_product_args(ctx context.Context, rawArg
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalOid2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_productsByGroupId_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.PageByID
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOpageById2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPageByID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_productsByGroupIds_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *model.PageByIds
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalOpageByIds2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPageByIds(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3705,6 +3765,90 @@ func (ec *executionContext) _Query_productsByIds(ctx context.Context, field grap
 	res := resTmp.([]*model.Product)
 	fc.Result = res
 	return ec.marshalNProduct2ᚕᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐProduct(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_productsByGroupId(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_productsByGroupId_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ProductsByGroupID(rctx, args["input"].(*model.PageByID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PagesWithGroup)
+	fc.Result = res
+	return ec.marshalNPagesWithGroup2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPagesWithGroup(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_productsByGroupIds(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_productsByGroupIds_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ProductsByGroupIds(rctx, args["input"].(*model.PageByIds))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PagesWithGroups)
+	fc.Result = res
+	return ec.marshalNPagesWithGroups2ᚖgithubᚗcomᚋwowuccoᚋG3ᚋpkgᚋgqlgenᚋgraphᚋmodelᚐPagesWithGroups(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_popular(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7194,6 +7338,34 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_productsByIds(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "productsByGroupId":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_productsByGroupId(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "productsByGroupIds":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_productsByGroupIds(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
