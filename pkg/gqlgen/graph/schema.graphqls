@@ -192,6 +192,37 @@ input TreeMenu {
   parent: Boolean
 }
 
+# delivery
+input cityId {
+  id: String!
+}
+
+type City {
+  id: String!,
+  name: String!
+}
+type DeliveryMethod {
+  id: Int!
+  name: String!
+  slug: String!
+}
+type PaymentMethod {
+  id: Int!
+  name: String!
+  slug: String!
+}
+type Warehouse {
+  id: String!
+  name: String!
+  address: String!
+  phone: String!
+}
+type DeliveryInfo {
+  deliveryMethod: DeliveryMethod!
+  paymentMethods: [PaymentMethod]!
+  warehouses: [Warehouse]!
+}
+
 type Query {
   product(input: id): Product
   products(input: page): Pages!
@@ -207,5 +238,11 @@ type Query {
   search(input: text): [Product]!
   exist(input: id): ExistProduct!
 
+  #menu
   treeMenu(input: TreeMenu): TreeMenuItem
+
+  #delivery
+  searchCity(input: text): [City]!
+  cityById(input: cityId): City!
+  deliveryInfoByCityId(input: cityId): [DeliveryInfo]!
 }

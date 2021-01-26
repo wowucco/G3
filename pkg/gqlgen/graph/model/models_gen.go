@@ -35,9 +35,26 @@ type CharacteristicValue struct {
 	Characteristic *Characteristic `json:"characteristic"`
 }
 
+type City struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type Country struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
+}
+
+type DeliveryInfo struct {
+	DeliveryMethod *DeliveryMethod  `json:"deliveryMethod"`
+	PaymentMethods []*PaymentMethod `json:"paymentMethods"`
+	Warehouses     []*Warehouse     `json:"warehouses"`
+}
+
+type DeliveryMethod struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 type ExistProduct struct {
@@ -67,6 +84,12 @@ type PagesWithGroup struct {
 type PagesWithGroups struct {
 	Pages  *Pages   `json:"pages"`
 	Groups []*Group `json:"groups"`
+}
+
+type PaymentMethod struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 type Photo struct {
@@ -156,6 +179,17 @@ type TreeParentMenuItem struct {
 type Unit struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
+}
+
+type Warehouse struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Address string `json:"address"`
+	Phone   string `json:"phone"`
+}
+
+type CityID struct {
+	ID string `json:"id"`
 }
 
 type ID struct {

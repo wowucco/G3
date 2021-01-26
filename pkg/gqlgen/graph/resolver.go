@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"github.com/wowucco/G3/internal/delivery"
 	"github.com/wowucco/G3/internal/menu"
 	"github.com/wowucco/G3/internal/product"
 )
@@ -13,4 +14,5 @@ type Resolver struct{
 	useCase product.UseCase
 	productRead product.ReadRepository
 	menuRead menu.ReadRepository
+	deliveryRead delivery.DeliveryReadRepository
 }

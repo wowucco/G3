@@ -6,7 +6,6 @@ package graph
 import (
 	"context"
 	"fmt"
-
 	"github.com/wowucco/G3/internal/entity"
 	"github.com/wowucco/G3/pkg/gqlgen/graph/generated"
 	"github.com/wowucco/G3/pkg/gqlgen/graph/model"
@@ -315,6 +314,63 @@ func (r *queryResolver) TreeMenu(ctx context.Context, input *model.TreeMenu) (*m
 	}, e
 }
 
+func (r *queryResolver) SearchCity(ctx context.Context, input *model.Text) ([]*model.City, error) {
+	c, e := r.deliveryRead.SearchCity(ctx, input.Text)
+
+	if e != nil {
+		return nil, e
+	}
+
+	cities := make([]*model.City, len(c))
+
+	for k, v := range c {
+		cities[k] = &model.City{
+			ID:   v.ID,
+			Name: v.Name,
+		}
+	}
+
+	return cities, nil
+}
+
+func (r *queryResolver) CityByID(ctx context.Context, input *model.CityID) (*model.City, error) {
+	c, e := r.deliveryRead.GetCityById(ctx, input.ID)
+
+	if e != nil {
+		return nil, e
+	}
+
+	return &model.City{
+		ID:   c.ID,
+		Name: c.Name,
+	}, nil
+}
+
+func (r *queryResolver) DeliveryInfoByCityID(ctx context.Context, input *model.CityID) ([]*model.DeliveryInfo, error) {
+	d, e := r.deliveryRead.GetDeliveryInfoByCityId(ctx, input.ID)
+
+	if e != nil {
+		return nil, e
+	}
+
+	deliveryInfos := make([]*model.DeliveryInfo, len(d))
+
+	for i, value := range d {
+
+		deliveryInfos[i] = &model.DeliveryInfo{
+			DeliveryMethod: &model.DeliveryMethod{
+				ID:   value.DeliveryMethod.ID,
+				Name: value.DeliveryMethod.Name,
+				Slug: value.DeliveryMethod.Slug,
+			},
+			PaymentMethods: deliveryPaymentMethods(value.PaymentMethods),
+			Warehouses: deliveryWarehouses(value.Warehouses),
+		}
+	}
+
+	return deliveryInfos, nil
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
@@ -326,6 +382,37 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
+
+func deliveryWarehouses(w []entity.Warehouse) []*model.Warehouse {
+	
+	mw := make([]*model.Warehouse, len(w))
+	
+	for k, v := range w {
+		mw[k] = &model.Warehouse{
+			ID:      v.ID,
+			Name:    v.Name,
+			Address: v.Address,
+			Phone:   v.Phone,
+		}
+	}
+
+	return mw
+}
+
+func deliveryPaymentMethods(p []entity.PaymentMethod) []*model.PaymentMethod {
+
+	pm := make([]*model.PaymentMethod, len(p))
+
+	for k, v := range p {
+		pm[k] = &model.PaymentMethod{
+			ID:   v.ID,
+			Name: v.Name,
+			Slug: v.Slug,
+		}
+	}
+
+	return pm
+}
 func parentMenuItem(parent *entity.ParentMenuItem) *model.TreeParentMenuItem {
 
 	if parent == nil {
