@@ -18,10 +18,10 @@ func (d PsqlDeliveryReadRepository) getDeliveryMethodsByCity(ctx context.Context
 
 	err := d.db.Select("d.*").
 		From(tableWithAlias(tableNameDeliveryMethods, "d")).
-			LeftJoin(tableWithAlias(tableNameDeliveryAssignCity, "a"), dbx.NewExp("d.id = a.delivery_method_id")).
+		LeftJoin(tableWithAlias(tableNameDeliveryAssignCity, "a"), dbx.NewExp("d.id = a.delivery_method_id")).
 		Where(dbx.NewExp("d.status={:status}", dbx.Params{"status": true})).
 		AndWhere(dbx.Or(dbx.NewExp("d.alpha={:alpha}", dbx.Params{"alpha": true}), dbx.NewExp("a.city_token={:token}", dbx.Params{"token": city.ID}))).
-			OrderBy("d.width desc").
+		OrderBy("d.width desc").
 		All(&rows)
 
 	if err != nil {
@@ -39,6 +39,27 @@ func (d PsqlDeliveryReadRepository) getDeliveryMethodsByCity(ctx context.Context
 	}
 
 	return deliveryMethods, nil
+}
+
+func (d PsqlDeliveryReadRepository) getDeliveryMethodBySlug(slug string) (*entity.DeliveryMethod, error) {
+
+	var row DeliveryMethod
+
+	err := d.db.Select("d.*").
+		From(tableWithAlias(tableNameDeliveryMethods, "d")).
+		Where(dbx.NewExp("d.slug={:slug}", dbx.Params{"slug": slug})).
+		AndWhere(dbx.NewExp("d.status={:status}", dbx.Params{"status": true})).
+		One(&row)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &entity.DeliveryMethod{
+		ID:   row.ID,
+		Name: row.Name,
+		Slug: row.Slug,
+	}, nil
 }
 
 func (d PsqlDeliveryReadRepository) getPaymentMethodsByDeliveryMethodId(ctx context.Context, id int) ([]entity.PaymentMethod, error) {
@@ -70,6 +91,27 @@ func (d PsqlDeliveryReadRepository) getPaymentMethodsByDeliveryMethodId(ctx cont
 	return pMethods, nil
 }
 
+func (d PsqlDeliveryReadRepository) getPaymentMethodBySlug(slug string) (*entity.PaymentMethod, error) {
+
+	var row PaymentMethod
+
+	err := d.db.Select("p.*").
+		From(tableWithAlias(tableNamePaymentMethods, "p")).
+		Where(dbx.NewExp("p.slug={:slug}", dbx.Params{"slug": slug})).
+		AndWhere(dbx.NewExp("p.status={:status}", dbx.Params{"status": true})).
+		One(&row)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &entity.PaymentMethod{
+		ID:   row.ID,
+		Name: row.Name,
+		Slug: row.Slug,
+	}, nil
+}
+
 func (d PsqlDeliveryReadRepository) getWarehousesForYourselfByCity(ctx context.Context, city entity.City) ([]entity.Warehouse, error) {
 
 	var row DeliveryAssignmentCity
@@ -93,19 +135,18 @@ func (d PsqlDeliveryReadRepository) getWarehousesForYourselfByCity(ctx context.C
 	_ = json.Unmarshal([]byte(row.Warehouses.String), &wj)
 
 	w := make([]entity.Warehouse, len(wj))
-	
+
 	for k, v := range wj {
 		w[k] = entity.Warehouse{
-			ID: v.Name,
+			ID:      v.Name,
 			Name:    v.Name,
 			Address: v.Address,
 			Phone:   v.Phone,
 		}
-	} 
+	}
 
 	return w, nil
 }
-
 
 func tableWithAlias(tableName, alias string) string {
 	return tableName + " " + alias

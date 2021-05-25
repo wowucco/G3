@@ -9,15 +9,27 @@ import (
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
+	"github.com/wowucco/G3/internal/checkout"
+	checkoutHttp "github.com/wowucco/G3/internal/checkout/delivery/http"
+	"github.com/wowucco/G3/internal/checkout/repository"
+	"github.com/wowucco/G3/internal/checkout/strategy"
+	"github.com/wowucco/G3/internal/checkout/usecase"
 	"github.com/wowucco/G3/internal/delivery"
 	_deliveryRepo "github.com/wowucco/G3/internal/delivery/repository"
 	"github.com/wowucco/G3/internal/menu"
 	_menuRepo "github.com/wowucco/G3/internal/menu/repository/psql"
 	"github.com/wowucco/G3/internal/product"
-	producttHttp "github.com/wowucco/G3/internal/product/delivery/http"
+	productHttp "github.com/wowucco/G3/internal/product/delivery/http"
 	_productRepo "github.com/wowucco/G3/internal/product/repository/psql"
 	productUC "github.com/wowucco/G3/internal/product/usecase"
 	"github.com/wowucco/G3/pkg/gqlgen/graph"
+	"github.com/wowucco/G3/pkg/http/middleware"
+	"github.com/wowucco/G3/pkg/notification"
+	"github.com/wowucco/G3/pkg/payments/liqpay"
+	"github.com/wowucco/G3/pkg/sms"
+	smsMock "github.com/wowucco/G3/pkg/sms/mock"
+	smsClub "github.com/wowucco/G3/pkg/sms/smsclub"
+	telegram2 "github.com/wowucco/G3/pkg/telegram"
 	"github.com/wowucco/go-novaposhta"
 	"log"
 	"net/http"
@@ -29,13 +41,20 @@ import (
 type App struct {
 	httpServer *http.Server
 
-	productUC product.UseCase
-	productRead product.ReadRepository
-	menuRead menu.ReadRepository
+	productUC    product.UseCase
+	productRead  product.ReadRepository
+	menuRead     menu.ReadRepository
 	deliveryRead delivery.DeliveryReadRepository
+
+	orderManage checkout.IOrderUseCase
 
 	db *dbx.DB
 	es *elasticsearch.Client
+
+	sms          sms.Client
+	smsChan      chan sms.Message
+	telegram     telegram2.Client
+	telegramChan chan telegram2.Message
 }
 
 func NewApp() *App {
@@ -44,15 +63,40 @@ func NewApp() *App {
 	np := initNovaposhtaClient()
 
 	productRepo := _productRepo.NewProductRepository(db)
+	productRead := _productRepo.NewProductReadRepository(db, es)
+	deliveryRead := _deliveryRepo.NewDeliveryReadRepository(db, es, np)
+
+	smsChan := make(chan sms.Message, 1)
+	telegramChan := make(chan telegram2.Message, 1)
+
+	telegramChats := map[string]string{
+		notification.TelegramOrderChat:  viper.GetString("telegram.order_chat_id"),
+		notification.TelegramRecallChat: viper.GetString("telegram.recall_chat_id"),
+	}
+
+	notify := notification.NewNotificationService(smsChan, telegramChan, telegramChats)
 
 	return &App{
 		db: db,
 		es: es,
 
-		productUC: productUC.NewProductUseCase(productRepo),
-		productRead: _productRepo.NewProductReadRepository(db, es),
-		menuRead: _menuRepo.NewMenuReadRepository(db),
-		deliveryRead: _deliveryRepo.NewDeliveryReadRepository(db, es, np),
+		productUC:    productUC.NewProductUseCase(productRepo),
+		productRead:  productRead,
+		menuRead:     _menuRepo.NewMenuReadRepository(db),
+		deliveryRead: deliveryRead,
+
+		orderManage: usecase.NewOrderUseCase(
+			repository.NewOrderRepository(db),
+			productRead,
+			deliveryRead,
+			repository.NewPaymentRepository(db),
+			notify,
+			initPaymentContext(db),
+		),
+
+
+		smsChan:      smsChan,
+		telegramChan: telegramChan,
 	}
 }
 
@@ -71,13 +115,19 @@ func (app *App) Run(port string) error {
 
 	api := router.Group("/api")
 
-	producttHttp.RegisterHTTPEndpoints(api, app.productUC)
+	platformAuth := middleware.TokenAuthMiddleware(viper.GetString("auth.api_id"), viper.GetString("auth.api_code"))
+
+	productHttp.RegisterHTTPEndpoints(api, app.productUC, platformAuth)
+	checkoutHttp.RegisterHTTPEndpoints(api, app.orderManage, platformAuth)
 	graph.RegisterGraphql(api, app.productUC, app.productRead, app.menuRead, app.deliveryRead)
 
 	app.httpServer = &http.Server{
-		Addr:           fmt.Sprintf(":%v", port),
-		Handler:        router,
+		Addr:    fmt.Sprintf(":%v", port),
+		Handler: router,
 	}
+
+	initSmsListening(app.smsChan)
+	initTelegramListening(app.telegramChan)
 
 	go func() {
 		if err := app.httpServer.ListenAndServe(); err != nil {
@@ -90,7 +140,7 @@ func (app *App) Run(port string) error {
 
 	<-quit
 
-	ctx, shutdown := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, shutdown := context.WithTimeout(context.Background(), 5*time.Second)
 
 	defer func() {
 		if err := app.db.Close(); err != nil {
@@ -103,7 +153,7 @@ func (app *App) Run(port string) error {
 	return app.httpServer.Shutdown(ctx)
 }
 
-func initDB()  *dbx.DB {
+func initDB() *dbx.DB {
 	// connect to the database
 	db, err := dbx.MustOpen("postgres", viper.GetString("db_dns"))
 	if err != nil {
@@ -152,4 +202,73 @@ func initNovaposhtaClient() *novaposhta.Client {
 	}
 
 	return np
+}
+
+func initSmsListening(ch <-chan sms.Message) {
+
+	var c sms.Client
+
+	switch viper.GetString("sms.provider") {
+	case "smsclub":
+		c = smsClub.NewClient(smsClub.Config{
+			Token: viper.GetString("sms.smsclub_token"),
+			From:  viper.GetString("sms.smsclub_alfaname"),
+		})
+	default:
+		c = smsMock.NewClient()
+	}
+
+	go func(cl sms.Client, ch <-chan sms.Message) {
+		for {
+			msg := <-ch
+			_, _ = cl.Send(msg)
+		}
+	}(c, ch)
+}
+
+func initTelegramListening(ch <-chan telegram2.Message) {
+
+	var cl telegram2.Client
+
+	switch viper.GetString("telegram.mode") {
+	case "real":
+		c, e := telegram2.NewTelegramClient(telegram2.Config{
+			ApiUrl: viper.GetString("telegram.api_url"),
+			BotId:  viper.GetString("telegram.bot_id"),
+		})
+
+		if e != nil {
+			panic(e)
+		}
+
+		cl = c
+	default:
+		c, _ := telegram2.NewMock()
+		cl = c
+	}
+
+	go func(cl telegram2.Client, ch <-chan telegram2.Message) {
+		for {
+			msg := <-ch
+			_, _ = cl.Send(msg)
+		}
+	}(cl, ch)
+}
+
+func initPaymentContext(db *dbx.DB) *strategy.PaymentContext {
+
+	r := repository.NewPaymentRepository(db)
+
+	lp := liqpay.NewClient(
+		viper.GetString("liqpay.public"),
+		viper.GetString("liqpay.private"),
+		viper.GetString("liqpay.callback_url"),
+		viper.GetString("liqpay.return_url"),
+	)
+
+	p2p := strategy.NewP2PStrategy(r, lp)
+	pp := strategy.NewPartsPayStrategy(r)
+	d := strategy.NewDefaultStrategy(r)
+
+	return strategy.NewPaymentContext(p2p, pp, d)
 }

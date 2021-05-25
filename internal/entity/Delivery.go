@@ -4,11 +4,12 @@ const DeliveryMethodYourself = "yourself"
 const DeliveryMethodNovaposhta = "novaposhta"
 const DeliveryMethodCourier = "courier"
 
-const PaymentMethodCash = "cash"
-const PaymentMethodP2P = "p2p"
-const PaymentMethodPayin = "pay-in"
-const PaymentMethodCashOnDelivery = "cod"
-const PaymentMethodToCard = "to_card"
+const DeliveryStatusNew = 1
+const DeliveryStatusCheck = 2
+const DeliveryStatusWaitingDelivery = 3
+const DeliveryStatusDelivery = 4
+const DeliveryStatusReadyToReceive = 5
+const DeliveryStatusCanceled = 6
 
 type City struct {
 	ID   string
@@ -21,16 +22,24 @@ type DeliveryInfo struct {
 	Warehouses     []Warehouse
 }
 
+func NewDeliveryMethod(id int, name, slug string, ) *DeliveryMethod {
+	return &DeliveryMethod{id, name, slug}
+}
+
 type DeliveryMethod struct {
 	ID   int
 	Name string
 	Slug string
 }
 
-type PaymentMethod struct {
-	ID   int
-	Name string
-	Slug string
+func (d DeliveryMethod) GetID() int {
+	return d.ID
+}
+func (d DeliveryMethod) GetName() string {
+	return d.Name
+}
+func (d DeliveryMethod) GetSlug() string {
+	return d.Slug
 }
 
 type Warehouse struct {

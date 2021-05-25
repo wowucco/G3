@@ -47,6 +47,16 @@ func (d DeliveryReadRepository) SearchCity(ctx context.Context, text string) ([]
 	return d.es.searchCity(ctx, text)
 }
 
+func (d DeliveryReadRepository) GetDeliveryMethodBySlug(slug string) (*entity.DeliveryMethod, error) {
+
+	return d.db.getDeliveryMethodBySlug(slug)
+}
+
+func (d DeliveryReadRepository) GetPaymentMethodBySlug(slug string) (*entity.PaymentMethod, error) {
+
+	return d.db.getPaymentMethodBySlug(slug)
+}
+
 func (d DeliveryReadRepository) getWarehousesOfCityByDeliveryMethod(ctx context.Context, city entity.City, deliveryMethod entity.DeliveryMethod) ([]entity.Warehouse, error) {
 
 	switch deliveryMethod.Slug {

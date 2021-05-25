@@ -24,4 +24,7 @@ type DeliveryReadRepository interface {
 	// GetDefaultCities(ctx context.Context) ([]*entity.City, error)
 	GetCityById(ctx context.Context, id string) (*entity.City, error)
 	SearchCity(ctx context.Context, text string) ([]*entity.City, error)
+
+	GetDeliveryMethodBySlug(slug string) (*entity.DeliveryMethod, error)
+	GetPaymentMethodBySlug(slug string) (*entity.PaymentMethod, error)
 }

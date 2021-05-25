@@ -7,7 +7,10 @@ require (
 	github.com/elastic/go-elasticsearch/v5 v5.6.1
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-ozzo/ozzo-dbx v1.5.0
-	github.com/lib/pq v1.8.0
+	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
+	github.com/google/uuid v1.2.0
+	github.com/lib/pq v1.10.1
+	github.com/liqpay/go-sdk v0.0.0-20200913160121-a6f81f822598
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/vektah/gqlparser/v2 v2.1.0

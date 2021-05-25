@@ -9,6 +9,9 @@ import (
 	"strconv"
 )
 
+const defaultCurrencyId = 1
+const defaultCurrencyName = "грн"
+const defaultCurrencyRate = 1
 const baseCurrency = "UAH"
 
 const photoLinkTypeOrigin = "origin"
@@ -90,6 +93,17 @@ type Country struct {
 	Name 	string
 }
 
+func DefaultCurrency() *Currency {
+	return NewCurrency(defaultCurrencyId, defaultCurrencyName, defaultCurrencyRate, baseCurrency)
+}
+func NewCurrency(id int, name string, rate float32, iso string) *Currency {
+	return &Currency{
+		ID:   id,
+		Name: name,
+		Rate: rate,
+		ISO:  iso,
+	}
+}
 type Currency struct {
 	ID 		int
 	Name 	string
@@ -105,11 +119,31 @@ func (c *Currency) IsBase() bool {
 	return false
 }
 
+func NewPrice(price, salePrice, saleCount int, currency *Currency) *Price {
+	var c *Currency
+
+	if currency == nil {
+		c = DefaultCurrency()
+	} else {
+		c = currency
+	}
+
+	return &Price{
+		Price:     price,
+		SalePrice: salePrice,
+		SaleCount: saleCount,
+		Currency:  *c,
+	}
+}
 type Price struct {
 	Price 		int
 	SalePrice 	int
 	SaleCount 	int
 	Currency 	Currency
+}
+
+func (p *Price) GetInCent() int {
+	return p.Price
 }
 
 func (p *Price) CentToCurrency() string {
@@ -124,9 +158,17 @@ func (p *Price) SaleCentToCurrency() string {
 
 	return p.toCurrency(p.SalePrice)
 }
+func (p *Price) GetPriceByQuantity(quantity int) int {
+
+	if p.SalePrice > 0 && p.SaleCount > 0 && quantity >= p.SaleCount {
+		return p.SalePrice
+	} else {
+		return p.Price
+	}
+}
 
 func (p *Price) toCurrency(cents int) string {
-	return fmt.Sprintf("%.2f", float64(cents / 100))
+	return fmt.Sprintf("%.2f", float64(cents) / 100)
 }
 
 type Meta struct {
@@ -159,6 +201,25 @@ type Group struct {
 	Meta 		Meta
 }
 
+func NewSimpleProduct(id int, name string, code, exist, status int, price Price) *SimpleProduct {
+	return &SimpleProduct{
+		ID:     id,
+		Name:   name,
+		Code:   code,
+		Exist:  exist,
+		Status: status,
+		Price:  price,
+	}
+}
+type SimpleProduct struct {
+	ID 			int
+	Name 		string
+	Code 		int
+	Exist 		int
+	Status 		int
+
+	Price 		Price
+}
 type Product struct {
 	ID 			int
 	Name 		string
