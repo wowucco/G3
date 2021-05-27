@@ -1,26 +1,13 @@
 package liqpay
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	_liqpay "github.com/liqpay/go-sdk"
-	"html/template"
 	"log"
 )
-
-//private const LIQPAY_API_PATH = 'request';
-//
-//private const ACTION_HOLD = 'hold';
-//private const ACTION_HOLD_COMPLETION = 'hold_completion';
-//
-//private const PAYMENT_STATUS_HOLD_WAIT = 'hold_wait';
-//
-//private const PAYMENT_STATUS_ERROR   = 'error';
-//private const PAYMENT_STATUS_SUCCESS = 'success';
-//private const PAYMENT_STATUS_FAILURE = 'failure';
 
 const (
 	path        = "request"
@@ -99,19 +86,7 @@ func (c Client) RenderForm(req _liqpay.Request) (string, error) {
 
 	signature := c.api.Sign([]byte(encodedJSON))
 
-	t, err := template.ParseFiles("./pkg/payments/liqpay/liqpay_form.html")
-
-	if err != nil {
-		return "", err
-	}
-	buf := bytes.Buffer{}
-	if err := t.Execute(&buf, formData{
-		Data:      encodedJSON,
-		Signature: signature,
-	}); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
+	return fmt.Sprintf("<form method=\"POST\" action=\"https://www.liqpay.ua/api/3/checkout\" accept-charset=\"utf-8\">\n    <input type=\"hidden\" name=\"data\" value=\"%s\"/>\n    <input type=\"hidden\" name=\"signature\" value=\"%s\"/>\n    <input type=\"image\" src=\"https://static.liqpay.ua/buttons/p1ru.radius.png\"/>\n</form>", encodedJSON, signature), nil
 }
 
 func (c *Client) AcceptHolden(orderId, amount string) (map[string]interface{}, error) {
