@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/wowucco/G3/internal/entity"
 )
 
@@ -34,9 +35,9 @@ type IAcceptHoldenStrategy interface {
 }
 
 type IProviderCallbackStrategy interface {
-	IsValidSignature(map[string]interface{}) bool
-	GetTransactionId(map[string]interface{}) string
-	ProcessingCallback(map[string]interface{}) (IProcessingCallbackPaymentStrategyResponse, error)
+	IsValidSignature(ctx *gin.Context) bool
+	GetTransactionId(ctx *gin.Context) string
+	ProcessingCallback(ctx *gin.Context) (IProcessingCallbackPaymentStrategyResponse, error)
 }
 
 func NewPaymentContext(p2pStrategy *P2PStrategy, partsPayStrategy *PartsPayStrategy, defaultStrategy *DefaultStrategy) *PaymentContext {

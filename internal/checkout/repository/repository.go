@@ -439,7 +439,7 @@ func (r PaymentRepository) Save(ctx context.Context, p *entity.Payment) error {
 		"status":         p.GetStatus(),
 		"created_at":     p.GetCreatedTime(),
 		"updated_at":     p.GetUpdatedTime(),
-	}, dbx.NewExp("id={:id}", dbx.Params{"id": p.GetId()})).
+	}, dbx.NewExp("transaction_id={:transaction_id}", dbx.Params{"transaction_id": p.GetTransactionId()})).
 		Execute()
 
 	return err

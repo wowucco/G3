@@ -76,7 +76,9 @@ func (o *Order) UpdatePaymentStatus(status int, comment string) {
 	h := NewOrderPaymentStatusHistory(status, time.Now().Unix(), comment)
 	o.payment.statusHistory = append(o.payment.statusHistory, h)
 }
-
+func (o *Order) NeedToCall() bool {
+	return o.doNotCall != true
+}
 /**
 ****************	Customer	*************
  */
@@ -242,6 +244,9 @@ type OrderPayment struct {
 func (o OrderPayment) GetStatus() int {
 	return o.status
 }
+func (o OrderPayment) GetStatusLabel() string {
+	return StatusLabel(o.status)
+}
 func (o OrderPayment) GetMethod() PaymentMethod {
 	return *o.method
 }
@@ -256,6 +261,9 @@ func (o OrderPayment) GetStatusHistory() []OrderPaymentStatusHistory {
 }
 func (o OrderPayment) GetExtra() OrderPaymentExtra {
 	return o.extra
+}
+func (o OrderPayment) HasToCardPayment() bool {
+	return o.method.Slug == PaymentMethodToCard
 }
 
 func NewOrderPaymentStatusHistory(status int, created int64, comment string) *OrderPaymentStatusHistory {

@@ -69,13 +69,6 @@ func NewApp() *App {
 	smsChan := make(chan sms.Message, 1)
 	telegramChan := make(chan telegram2.Message, 1)
 
-	telegramChats := map[string]string{
-		notification.TelegramOrderChat:  viper.GetString("telegram.order_chat_id"),
-		notification.TelegramRecallChat: viper.GetString("telegram.recall_chat_id"),
-	}
-
-	notify := notification.NewNotificationService(smsChan, telegramChan, telegramChats)
-
 	return &App{
 		db: db,
 		es: es,
@@ -90,10 +83,9 @@ func NewApp() *App {
 			productRead,
 			deliveryRead,
 			repository.NewPaymentRepository(db),
-			notify,
+			initNotificationService(smsChan, telegramChan),
 			initPaymentContext(db),
 		),
-
 
 		smsChan:      smsChan,
 		telegramChan: telegramChan,
@@ -254,16 +246,32 @@ func initTelegramListening(ch <-chan telegram2.Message) {
 		}
 	}(cl, ch)
 }
+func initNotificationService(smsChan chan sms.Message, telegramChan chan telegram2.Message) *notification.Service {
+
+	telegramChats := map[string]string{
+		notification.TelegramOrderChat:  viper.GetString("telegram.order_chat_id"),
+		notification.TelegramRecallChat: viper.GetString("telegram.recall_chat_id"),
+	}
+
+	return notification.NewNotificationService(
+		smsChan,
+		telegramChan,
+		telegramChats,
+		viper.GetString("payments.card_number"),
+		viper.GetString("domain.bo_order_link_mask"),
+		viper.GetString("domain.web_product_link_mask"),
+	)
+}
 
 func initPaymentContext(db *dbx.DB) *strategy.PaymentContext {
 
 	r := repository.NewPaymentRepository(db)
 
 	lp := liqpay.NewClient(
-		viper.GetString("liqpay.public"),
-		viper.GetString("liqpay.private"),
-		viper.GetString("liqpay.callback_url"),
-		viper.GetString("liqpay.return_url"),
+		viper.GetString("payments.liqpay.public"),
+		viper.GetString("payments.liqpay.private"),
+		viper.GetString("payments.liqpay.callback_url"),
+		viper.GetString("payments.liqpay.return_url"),
 	)
 
 	p2p := strategy.NewP2PStrategy(r, lp)

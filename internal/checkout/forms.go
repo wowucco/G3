@@ -61,5 +61,4 @@ type IAcceptHoldenPaymentForm interface {
 
 type IProviderCallbackPaymentForm interface {
 	GetProvider() string
-	GetParams() map[string]interface{}
 }

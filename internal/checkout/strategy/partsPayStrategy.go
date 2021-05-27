@@ -2,6 +2,7 @@ package strategy
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
 	"github.com/wowucco/G3/internal/checkout"
 	"github.com/wowucco/G3/internal/entity"
 )
@@ -27,14 +28,18 @@ func (s *PartsPayStrategy) Accept(ctx context.Context, order *entity.Order, paym
 	return nil, nil
 }
 
-func (s *PartsPayStrategy) IsValidSignature(map[string]interface{}) bool {
+func (s *PartsPayStrategy) RetrieveData(ctx *gin.Context) {
+
+}
+
+func (s *PartsPayStrategy) IsValidSignature(ctx *gin.Context) bool {
 
 	return false
 }
-func (s *PartsPayStrategy) GetTransactionId(map[string]interface{}) string {
+func (s *PartsPayStrategy) GetTransactionId(ctx *gin.Context) string {
 	return ""
 }
-func (s *PartsPayStrategy) ProcessingCallback(map[string]interface{}) (IProcessingCallbackPaymentStrategyResponse, error) {
+func (s *PartsPayStrategy) ProcessingCallback(ctx *gin.Context) (IProcessingCallbackPaymentStrategyResponse, error) {
 
 	return nil, nil
 }

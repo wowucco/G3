@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/wowucco/G3/internal/checkout"
 	"github.com/wowucco/G3/internal/entity"
 	"github.com/wowucco/G3/pkg/payments/liqpay"
@@ -56,6 +57,9 @@ func (s *P2PStrategy) Accept(ctx context.Context, order *entity.Order, payment *
 	case liqpay.StatusSuccess:
 		status = entity.PaymentStatusDone
 		desc = "Holden payment was accept"
+	case liqpay.StatusReversed:
+		status = entity.PaymentStatusRefund
+		desc = "Holden payment was reversed"
 	default:
 		return nil, errors.New(fmt.Sprintf("[unhandled liqpay status][%v]", r["status"]))
 	}
@@ -63,28 +67,36 @@ func (s *P2PStrategy) Accept(ctx context.Context, order *entity.Order, payment *
 	return NewAcceptHoldenPaymentStrategyResponse(status, desc, r), nil
 }
 
-func (s *P2PStrategy) IsValidSignature(data map[string]interface{}) bool {
+func (s *P2PStrategy) IsValidSignature(ctx *gin.Context) bool {
+	cb := make(map[string]interface{})
+	cb["data"] = ctx.PostForm("data")
+	cb["signature"] = ctx.PostForm("signature")
+	return s.provider.ValidateSign(cb)
+}
+func (s *P2PStrategy) GetTransactionId(ctx *gin.Context) string {
+	cb := make(map[string]interface{})
+	cb["data"] = ctx.PostForm("data")
+	cb["signature"] = ctx.PostForm("signature")
+	return s.provider.GetTransactionId(cb)
+}
+func (s *P2PStrategy) ProcessingCallback(ctx *gin.Context) (IProcessingCallbackPaymentStrategyResponse, error) {
+	cb := make(map[string]interface{})
+	cb["data"] = ctx.PostForm("data")
+	cb["signature"] = ctx.PostForm("signature")
 
-	return s.provider.ValidateSign(data)
-}
-func (s *P2PStrategy) GetTransactionId(data map[string]interface{}) string {
-	return s.provider.GetTransactionId(data)
-}
-func (s *P2PStrategy) ProcessingCallback(data map[string]interface{}) (IProcessingCallbackPaymentStrategyResponse, error) {
-	
-	cb, err := s.provider.Processing(data)
+	res, err := s.provider.Processing(cb)
 
 	if err != nil {
 		return nil, err
 	}
 
-	status, err := mapLiqpayStatuses(cb.Status)
+	status, err := mapLiqpayStatuses(res.Status)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return NewProcessingCallbackPaymentStrategyResponse(status, cb.Desc, cb.Stack), nil
+	return NewProcessingCallbackPaymentStrategyResponse(status, res.Desc, res.Stack), nil
 }
 
 func mapLiqpayStatuses(s string) (int, error) {

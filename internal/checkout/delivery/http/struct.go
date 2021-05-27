@@ -287,13 +287,9 @@ func (f AccentPaymentForm) Validate() error {
 
 type ProviderCallbackPaymentForm struct {
 	Provider string
-	Params map[string]interface{}
 }
 
 func (f ProviderCallbackPaymentForm) GetProvider() string {
 	return f.Provider
-}
-func (f ProviderCallbackPaymentForm) GetParams() map[string]interface{} {
-	return f.Params
 }
 

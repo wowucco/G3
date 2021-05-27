@@ -139,17 +139,14 @@ func (h *Handler) acceptHolden(c *gin.Context) {
 func (h *Handler) callback(c *gin.Context) {
 	provider := c.Param("provider")
 
-	b, _ := ioutil.ReadAll(c.Request.Body)
-
-	body := make(map[string]interface{})
-
-	_ = json.Unmarshal(b, &body)
-
 	form := ProviderCallbackPaymentForm{
 		Provider: provider,
-		Params: body,
 	}
-	_,_ = h.orderManage.ProviderCallback(c, form)
+	_, err := h.orderManage.ProviderCallback(c, form)
+
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"provider": provider,

@@ -2,6 +2,7 @@ package checkout
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
 	"github.com/wowucco/G3/internal/entity"
 )
 
@@ -23,5 +24,5 @@ type IOrderUseCase interface {
 	Create(ctx context.Context, form CreateOrderForm) (*entity.Order, error)
 	InitPayment(ctx context.Context, form InitPaymentForm) (IInitPaymentResponse, error)
 	AcceptHoldenPayment(ctx context.Context, form IAcceptHoldenPaymentForm) error
-	ProviderCallback(ctx context.Context, form IProviderCallbackPaymentForm) (IProviderCallbackPaymentResponse, error)
+	ProviderCallback(ctx *gin.Context, form IProviderCallbackPaymentForm) (IProviderCallbackPaymentResponse, error)
 }

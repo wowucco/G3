@@ -22,6 +22,15 @@ const PaymentStatusRefund = 6
 const PaymentStatusFailed = 7
 const PaymentStatusCanceled = 8
 
+const PaymentStatusNewLabel = "New"
+const PaymentStatusWaitingConfirmationLabel = "Waiting confirmation"
+const PaymentStatusConfirmedLabel = "Confirmed"
+const PaymentStatusPendingLabel = "Pending"
+const PaymentStatusDoneLabel = "Done"
+const PaymentStatusRefundLabel = "Refund"
+const PaymentStatusFailedLabel = "Failed"
+const PaymentStatusCanceledLabel = "Canceled"
+
 const PaymentInitActionForm = "form"
 const PaymentInitActionRedirect = "redirect"
 const PaymentInitActionNone = "none"
@@ -128,6 +137,7 @@ func (p *Payment) SetProvider(provider string) {
 func (p *Payment) UpdateStatus(status int) {
 	p.status = status
 }
+
 //func (p *Payment) UpdateStatus(status int) error {
 //
 //}
@@ -152,4 +162,18 @@ func (d PaymentMethod) GetName() string {
 
 func (d PaymentMethod) GetSlug() string {
 	return d.Slug
+}
+func StatusLabel(status int) string {
+	m := map[int]string{
+		PaymentStatusNew: PaymentStatusNewLabel,
+		PaymentStatusWaitingConfirmation: PaymentStatusWaitingConfirmationLabel,
+		PaymentStatusConfirmed: PaymentStatusConfirmedLabel,
+		PaymentStatusPending: PaymentStatusPendingLabel,
+		PaymentStatusDone: PaymentStatusDoneLabel,
+		PaymentStatusRefund: PaymentStatusRefundLabel,
+		PaymentStatusFailed: PaymentStatusFailedLabel,
+		PaymentStatusCanceled: PaymentStatusCanceledLabel,
+	}
+
+	return m[status]
 }

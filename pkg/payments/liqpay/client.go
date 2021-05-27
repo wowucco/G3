@@ -29,12 +29,14 @@ const (
 
 	actionHold       = "hold"
 	actionAcceptHold = "hold_completion"
+	actionRefund     = "refund"
 
 	StatusHoldWait = "hold_wait"
 
 	StatusError   = "error"
 	StatusSuccess = "success"
 	StatusFail    = "failure"
+	StatusReversed = "reversed"
 )
 
 type CallbackResponse struct {
@@ -133,6 +135,8 @@ func (c *Client) AcceptHolden(orderId, amount string) (map[string]interface{}, e
 }
 
 func (c *Client) ValidateSign(data map[string]interface{}) bool {
+	log.Printf("make: %v\n", c.api.Sign([]byte(data["data"].(string))))
+	log.Printf("request: %v\n", data["signature"].(string))
 	return c.api.Sign([]byte(data["data"].(string))) == data["signature"].(string)
 }
 
@@ -174,6 +178,7 @@ func (c *Client) handleByHoldCallback(body map[string]interface{}) (*CallbackRes
 	switch body["status"].(string) {
 	case StatusHoldWait:
 		cb.Status = StatusHoldWait
+		cb.Desc = fmt.Sprintf("update status by provider callback")
 		return cb, nil
 	case StatusError:
 		cb.Status = StatusError

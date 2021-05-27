@@ -22,7 +22,7 @@ type PaymentExtra struct {
 	PartsPay int    `json:"parts_pay"`
 }
 type Payment struct {
-	ID            int            `db:"int"`
+	ID            int            `db:"id"`
 	TransactionID string         `db:"transaction_id"`
 	OrderId       int            `db:"order_id"`
 	Provider      string         `db:"provider"`

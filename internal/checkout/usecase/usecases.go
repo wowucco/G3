@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/wowucco/G3/internal/checkout"
 	"github.com/wowucco/G3/internal/checkout/strategy"
 	"github.com/wowucco/G3/internal/delivery"
@@ -173,24 +174,24 @@ func (o OrderUserCase) AcceptHoldenPayment(ctx context.Context, form checkout.IA
 		return errors.New(fmt.Sprintf("[error][accept holden][order save][%d][%v]", order.GetId(), err))
 	}
 
-	o.notify.AcceptPayment(order, p)
+	o.notify.PaymentStatusUpdated(order, p)
 
 	return nil
 }
 
-func (o OrderUserCase) ProviderCallback(ctx context.Context, form checkout.IProviderCallbackPaymentForm) (checkout.IProviderCallbackPaymentResponse, error) {
+func (o OrderUserCase) ProviderCallback(ctx *gin.Context, form checkout.IProviderCallbackPaymentForm) (checkout.IProviderCallbackPaymentResponse, error) {
 
 	s, err := o.paymentContext.GetProviderCallbackPaymentStrategy(form.GetProvider())
 
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("[error][provider callback][unresolved strategy][%v][%v]", form.GetParams(), err))
+		return nil, errors.New(fmt.Sprintf("[error][provider callback][unresolved strategy][%v][%v]", form.GetProvider(), err))
 	}
 
-	if s.IsValidSignature(form.GetParams()) == false {
-		return nil, errors.New(fmt.Sprintf("[error][provider callback][invalid signature][%v][%v]", form.GetParams(), err))
+	if s.IsValidSignature(ctx) == false {
+		return nil, errors.New(fmt.Sprintf("[error][provider callback][invalid signature][%v][%v]", form.GetProvider(), err))
 	}
 
-	transactionId := s.GetTransactionId(form.GetParams())
+	transactionId := s.GetTransactionId(ctx)
 
 	payment, err := o.paymentRepository.Get(ctx, transactionId)
 
@@ -204,7 +205,7 @@ func (o OrderUserCase) ProviderCallback(ctx context.Context, form checkout.IProv
 		return nil, errors.New(fmt.Sprintf("[error][provider callback][order not found][%d][%v]", payment.GetOrderId(), err))
 	}
 
-	resp, err := s.ProcessingCallback(form.GetParams())
+	resp, err := s.ProcessingCallback(ctx)
 
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("[error][provider callback][processing error][%d][%v]", payment.GetOrderId(), err))
@@ -224,7 +225,7 @@ func (o OrderUserCase) ProviderCallback(ctx context.Context, form checkout.IProv
 		return nil, errors.New(fmt.Sprintf("[error][provider callback][order save][%d][%v]", order.GetId(), err))
 	}
 
-	o.notify.AcceptPayment(order, payment)
+	o.notify.PaymentStatusUpdated(order, payment)
 
 	return nil, nil
 }
