@@ -76,6 +76,9 @@ func (o *Order) UpdatePaymentStatus(status int, comment string) {
 	h := NewOrderPaymentStatusHistory(status, time.Now().Unix(), comment)
 	o.payment.statusHistory = append(o.payment.statusHistory, h)
 }
+func (o *Order) HasEqualStatus(status int) bool {
+	return o.payment.status == status
+}
 func (o *Order) NeedToCall() bool {
 	return o.doNotCall != true
 }

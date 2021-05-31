@@ -137,6 +137,9 @@ func (p *Payment) SetProvider(provider string) {
 func (p *Payment) UpdateStatus(status int) {
 	p.status = status
 }
+func (p *Payment) HasEqualStatus(status int) bool {
+	return p.status == status
+}
 
 //func (p *Payment) UpdateStatus(status int) error {
 //

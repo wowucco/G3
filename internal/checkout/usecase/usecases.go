@@ -12,6 +12,7 @@ import (
 	"github.com/wowucco/G3/internal/product"
 	"github.com/wowucco/G3/pkg/notification"
 	"log"
+	"sync"
 )
 
 func NewOrderUseCase(
@@ -34,9 +35,11 @@ type OrderUserCase struct {
 
 	notify         *notification.Service
 	paymentContext *strategy.PaymentContext
+
+	sync.Mutex
 }
 
-func (o OrderUserCase) Create(ctx context.Context, form checkout.CreateOrderForm) (*entity.Order, error) {
+func (o *OrderUserCase) Create(ctx context.Context, form checkout.CreateOrderForm) (*entity.Order, error) {
 
 	oProducts, err := o.orderProducts(ctx, form)
 
@@ -88,7 +91,7 @@ func (o OrderUserCase) Create(ctx context.Context, form checkout.CreateOrderForm
 	return order, nil
 }
 
-func (o OrderUserCase) InitPayment(ctx context.Context, form checkout.InitPaymentForm) (checkout.IInitPaymentResponse, error) {
+func (o *OrderUserCase) InitPayment(ctx context.Context, form checkout.InitPaymentForm) (checkout.IInitPaymentResponse, error) {
 
 	order, err := o.orderRepository.Get(ctx, form.GetOrderId())
 
@@ -135,7 +138,10 @@ func (o OrderUserCase) InitPayment(ctx context.Context, form checkout.InitPaymen
 	return NewIniPaymentResponse(p, order, r.GetAction(), r.GetResource()), nil
 }
 
-func (o OrderUserCase) AcceptHoldenPayment(ctx context.Context, form checkout.IAcceptHoldenPaymentForm) error {
+func (o *OrderUserCase) AcceptHoldenPayment(ctx context.Context, form checkout.IAcceptHoldenPaymentForm) error {
+
+	o.Lock()
+	defer o.Unlock()
 
 	p, err := o.paymentRepository.Get(ctx, form.GetTransactionId())
 
@@ -179,7 +185,10 @@ func (o OrderUserCase) AcceptHoldenPayment(ctx context.Context, form checkout.IA
 	return nil
 }
 
-func (o OrderUserCase) ProviderCallback(ctx *gin.Context, form checkout.IProviderCallbackPaymentForm) (checkout.IProviderCallbackPaymentResponse, error) {
+func (o *OrderUserCase) ProviderCallback(ctx *gin.Context, form checkout.IProviderCallbackPaymentForm) (checkout.IProviderCallbackPaymentResponse, error) {
+
+	o.Lock()
+	defer o.Unlock()
 
 	s, err := o.paymentContext.GetProviderCallbackPaymentStrategy(form.GetProvider())
 
@@ -211,6 +220,11 @@ func (o OrderUserCase) ProviderCallback(ctx *gin.Context, form checkout.IProvide
 		return nil, errors.New(fmt.Sprintf("[error][provider callback][processing error][%d][%v]", payment.GetOrderId(), err))
 	}
 
+	if payment.HasEqualStatus(resp.GetStatus()) == true && order.HasEqualStatus(resp.GetStatus()) {
+		log.Printf("[provider callback][payment has current status][%s][%d]", transactionId, resp.GetStatus())
+		return nil, nil
+	}
+
 	payment.UpdateStatus(resp.GetStatus())
 	err = o.paymentRepository.Save(ctx, payment)
 
@@ -230,7 +244,7 @@ func (o OrderUserCase) ProviderCallback(ctx *gin.Context, form checkout.IProvide
 	return nil, nil
 }
 
-func (o OrderUserCase) orderProducts(ctx context.Context, form checkout.CreateOrderForm) ([]*entity.OrderProduct, error) {
+func (o *OrderUserCase) orderProducts(ctx context.Context, form checkout.CreateOrderForm) ([]*entity.OrderProduct, error) {
 
 	pIds := make([]int, len(form.GetOrder().GetOrderItems()))
 	mTemp := make(map[int]checkout.OrderItemForm, len(form.GetOrder().GetOrderItems()))
