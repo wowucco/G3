@@ -88,7 +88,7 @@ func (s *PartsPayStrategy) Accept(ctx context.Context, order *entity.Order, paym
 		status = entity.PaymentStatusFailed
 		desc = fmt.Sprintf("err_code: none,err_desc: %v", result.Message)
 	case api.StateSuccess:
-		status = entity.PaymentStatusConfirmed
+		status = entity.PaymentStatusDone
 		desc = "Holden payment was accept"
 	default:
 		return nil, errors.New(fmt.Sprintf("[privat pay accept][unhandled response status][%v]", result.State))
