@@ -220,6 +220,10 @@ func (o *OrderUserCase) ProviderCallback(ctx *gin.Context, form checkout.IProvid
 		return nil, errors.New(fmt.Sprintf("[error][provider callback][processing error][%d][%v]", payment.GetOrderId(), err))
 	}
 
+	if resp.Skip() == true {
+		return nil, nil
+	}
+
 	if payment.HasEqualStatus(resp.GetStatus()) == true && order.HasEqualStatus(resp.GetStatus()) {
 		log.Printf("[provider callback][payment has current status][%s][%d]", transactionId, resp.GetStatus())
 		return nil, nil

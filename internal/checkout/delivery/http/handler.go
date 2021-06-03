@@ -137,6 +137,7 @@ func (h *Handler) acceptHolden(c *gin.Context) {
 }
 
 func (h *Handler) callback(c *gin.Context) {
+
 	provider := c.Param("provider")
 
 	form := ProviderCallbackPaymentForm{

@@ -26,6 +26,7 @@ import (
 	"github.com/wowucco/G3/pkg/http/middleware"
 	"github.com/wowucco/G3/pkg/notification"
 	"github.com/wowucco/G3/pkg/payments/liqpay"
+	"github.com/wowucco/G3/pkg/payments/privatPay"
 	"github.com/wowucco/G3/pkg/sms"
 	smsMock "github.com/wowucco/G3/pkg/sms/mock"
 	smsClub "github.com/wowucco/G3/pkg/sms/smsclub"
@@ -274,8 +275,17 @@ func initPaymentContext(db *dbx.DB) *strategy.PaymentContext {
 		viper.GetString("payments.liqpay.return_url"),
 	)
 
+	ppp := privatPay.NewClient(privatPay.Config{
+		StoreId:     viper.GetString("payments.privat_pay.store_id"),
+		Password:    viper.GetString("payments.privat_pay.passport"),
+		Min:         viper.GetInt("payments.privat_pay.min_parts"),
+		Max:         viper.GetInt("payments.privat_pay.max_parts"),
+		ResponseUrl: viper.GetString("payments.privat_pay.callback_url"),
+		RedirectUrl: viper.GetString("payments.privat_pay.return_url"),
+	})
+
 	p2p := strategy.NewP2PStrategy(r, lp)
-	pp := strategy.NewPartsPayStrategy(r)
+	pp := strategy.NewPartsPayStrategy(r, ppp)
 	d := strategy.NewDefaultStrategy(r)
 
 	return strategy.NewPaymentContext(p2p, pp, d)

@@ -24,6 +24,7 @@ type IProcessingCallbackPaymentStrategyResponse interface {
 	GetStatus() int
 	GetDescription() string
 	GetData() map[string]interface{}
+	Skip() bool
 }
 
 type IInitPaymentStrategy interface {
@@ -96,8 +97,8 @@ func NewIniPaymentStrategyResponse(action, resource, provider string) IInitPayme
 }
 
 type InitPaymentStrategyResponse struct {
-	payment *entity.Payment
-	order *entity.Order
+	payment  *entity.Payment
+	order    *entity.Order
 	action   string
 	resource string
 	provider string
@@ -115,8 +116,8 @@ func (r *InitPaymentStrategyResponse) GetProviderName() string {
 
 type AcceptHoldenPaymentStrategyResponse struct {
 	status int
-	desc string
-	stack map[string]interface{}
+	desc   string
+	stack  map[string]interface{}
 }
 
 func NewAcceptHoldenPaymentStrategyResponse(status int, desc string, stack map[string]interface{}) IAcceptHoldenPaymentStrategyResponse {
@@ -135,12 +136,14 @@ func (r *AcceptHoldenPaymentStrategyResponse) GetData() map[string]interface{} {
 
 type ProcessingCallbackPaymentStrategyResponse struct {
 	status int
-	desc string
-	stack map[string]interface{}
+	desc   string
+	stack  map[string]interface{}
+	skip   bool
 }
-func NewProcessingCallbackPaymentStrategyResponse(status int, desc string, stack map[string]interface{}) IProcessingCallbackPaymentStrategyResponse {
 
-	return &ProcessingCallbackPaymentStrategyResponse{status, desc, stack}
+func NewProcessingCallbackPaymentStrategyResponse(status int, desc string, stack map[string]interface{}, skip bool) IProcessingCallbackPaymentStrategyResponse {
+
+	return &ProcessingCallbackPaymentStrategyResponse{status, desc, stack, skip}
 }
 func (r *ProcessingCallbackPaymentStrategyResponse) GetStatus() int {
 	return r.status
@@ -151,4 +154,6 @@ func (r *ProcessingCallbackPaymentStrategyResponse) GetDescription() string {
 func (r *ProcessingCallbackPaymentStrategyResponse) GetData() map[string]interface{} {
 	return r.stack
 }
-
+func (r *ProcessingCallbackPaymentStrategyResponse) Skip() bool {
+	return r.skip
+}

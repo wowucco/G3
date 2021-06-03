@@ -44,7 +44,7 @@ func (s *P2PStrategy) Accept(ctx context.Context, order *entity.Order, payment *
 
 	var (
 		status int
-		desc string
+		desc   string
 	)
 
 	switch r["status"].(string) {
@@ -80,6 +80,11 @@ func (s *P2PStrategy) GetTransactionId(ctx *gin.Context) string {
 	return s.provider.GetTransactionId(cb)
 }
 func (s *P2PStrategy) ProcessingCallback(ctx *gin.Context) (IProcessingCallbackPaymentStrategyResponse, error) {
+
+	var (
+		status int
+		skip   bool
+	)
 	cb := make(map[string]interface{})
 	cb["data"] = ctx.PostForm("data")
 	cb["signature"] = ctx.PostForm("signature")
@@ -90,13 +95,13 @@ func (s *P2PStrategy) ProcessingCallback(ctx *gin.Context) (IProcessingCallbackP
 		return nil, err
 	}
 
-	status, err := mapLiqpayStatuses(res.Status)
+	status, err = mapLiqpayStatuses(res.Status)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return NewProcessingCallbackPaymentStrategyResponse(status, res.Desc, res.Stack), nil
+	return NewProcessingCallbackPaymentStrategyResponse(status, res.Desc, res.Stack, skip), nil
 }
 
 func mapLiqpayStatuses(s string) (int, error) {

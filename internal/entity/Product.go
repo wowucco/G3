@@ -19,13 +19,13 @@ const photoLinkTypeThumb = "thumb"
 const photoLinkTypeSmall = "small"
 
 type Photo struct {
-	ID 		int
-	Link 	string
-	Main 	bool
-	Rating 	int
+	ID     int
+	Link   string
+	Main   bool
+	Rating int
 }
 
-func (photo Photo) IsMain() bool  {
+func (photo Photo) IsMain() bool {
 	return photo.Main
 }
 
@@ -65,32 +65,32 @@ func (photo *Photo) getUrl(p *Product, linkType string) string {
 }
 
 type Unit struct {
-	ID 		int
-	Name 	string
+	ID   int
+	Name string
 }
 
 type CharacteristicType struct {
-	ID 		int
-	Name 	string
-	Custom 	bool
+	ID     int
+	Name   string
+	Custom bool
 }
 
 type Characteristic struct {
-	ID 		int
-	Name 	string
-	Type 	CharacteristicType
-	Unit 	Unit
+	ID   int
+	Name string
+	Type CharacteristicType
+	Unit Unit
 }
 
 type CharacteristicValue struct {
-	ID 				int
-	Characteristic 	Characteristic
-	Value 			string
+	ID             int
+	Characteristic Characteristic
+	Value          string
 }
 
 type Country struct {
-	ID 		int
-	Name 	string
+	ID   int
+	Name string
 }
 
 func DefaultCurrency() *Currency {
@@ -104,11 +104,12 @@ func NewCurrency(id int, name string, rate float32, iso string) *Currency {
 		ISO:  iso,
 	}
 }
+
 type Currency struct {
-	ID 		int
-	Name 	string
-	Rate 	float32
-	ISO 	string
+	ID   int
+	Name string
+	Rate float32
+	ISO  string
 }
 
 func (c *Currency) IsBase() bool {
@@ -135,11 +136,12 @@ func NewPrice(price, salePrice, saleCount int, currency *Currency) *Price {
 		Currency:  *c,
 	}
 }
+
 type Price struct {
-	Price 		int
-	SalePrice 	int
-	SaleCount 	int
-	Currency 	Currency
+	Price     int
+	SalePrice int
+	SaleCount int
+	Currency  Currency
 }
 
 func (p *Price) GetInCent() int {
@@ -149,7 +151,9 @@ func (p *Price) GetInCent() int {
 func (p *Price) CentToCurrency() string {
 	return p.toCurrency(p.Price)
 }
-
+func (p *Price) CentToFloatValue() float64 {
+	return float64(p.Price) / 100
+}
 func (p *Price) SaleCentToCurrency() string {
 
 	if p.SalePrice == 0 {
@@ -157,6 +161,12 @@ func (p *Price) SaleCentToCurrency() string {
 	}
 
 	return p.toCurrency(p.SalePrice)
+}
+func (p *Price) SaleCentToFloatValue() float64 {
+	if p.SalePrice == 0 {
+		return 0
+	}
+	return float64(p.SalePrice) / 100
 }
 func (p *Price) GetPriceByQuantity(quantity int) int {
 
@@ -168,37 +178,37 @@ func (p *Price) GetPriceByQuantity(quantity int) int {
 }
 
 func (p *Price) toCurrency(cents int) string {
-	return fmt.Sprintf("%.2f", float64(cents) / 100)
+	return fmt.Sprintf("%.2f", float64(cents)/100)
 }
 
 type Meta struct {
-	Keywords 	string
-	Title 		string
+	Keywords    string
+	Title       string
 	Description string
 }
 
 type Brand struct {
-	ID 		int
-	Name 	string
-	Slug 	string
+	ID   int
+	Name string
+	Slug string
 }
 
 type Category struct {
-	ID 			int
-	Name 		string
-	Title		string
+	ID          int
+	Name        string
+	Title       string
 	Description string
-	Slug 		string
-	Photo 		Photo
-	Meta 		Meta
+	Slug        string
+	Photo       Photo
+	Meta        Meta
 }
 
 type Group struct {
-	ID 			int
-	Name 		string
+	ID          int
+	Name        string
 	Description string
-	Photo 		Photo
-	Meta 		Meta
+	Photo       Photo
+	Meta        Meta
 }
 
 func NewSimpleProduct(id int, name string, code, exist, status int, price Price) *SimpleProduct {
@@ -211,35 +221,36 @@ func NewSimpleProduct(id int, name string, code, exist, status int, price Price)
 		Price:  price,
 	}
 }
-type SimpleProduct struct {
-	ID 			int
-	Name 		string
-	Code 		int
-	Exist 		int
-	Status 		int
 
-	Price 		Price
+type SimpleProduct struct {
+	ID     int
+	Name   string
+	Code   int
+	Exist  int
+	Status int
+
+	Price Price
 }
 type Product struct {
-	ID 			int
-	Name 		string
+	ID          int
+	Name        string
 	Description string
-	Code 		int
-	Exist 		int
-	Status 		int
+	Code        int
+	Exist       int
+	Status      int
 
-	Brand 		Brand
-	Category 	Category
-	Group		Group
-	Unit		Unit
-	Country 	Country
+	Brand    Brand
+	Category Category
+	Group    Group
+	Unit     Unit
+	Country  Country
 
-	Price 		Price
+	Price Price
 
 	Values []CharacteristicValue
 
-	MainPhoto 	Photo
-	Photos 		[]Photo
+	MainPhoto Photo
+	Photos    []Photo
 
-	Meta 		Meta
+	Meta Meta
 }

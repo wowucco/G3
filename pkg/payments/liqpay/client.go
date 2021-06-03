@@ -110,8 +110,7 @@ func (c *Client) AcceptHolden(orderId, amount string) (map[string]interface{}, e
 }
 
 func (c *Client) ValidateSign(data map[string]interface{}) bool {
-	log.Printf("make: %v\n", c.api.Sign([]byte(data["data"].(string))))
-	log.Printf("request: %v\n", data["signature"].(string))
+
 	return c.api.Sign([]byte(data["data"].(string))) == data["signature"].(string)
 }
 
