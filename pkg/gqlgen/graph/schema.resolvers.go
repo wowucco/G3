@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"fmt"
+
 	"github.com/wowucco/G3/internal/entity"
 	"github.com/wowucco/G3/pkg/gqlgen/graph/generated"
 	"github.com/wowucco/G3/pkg/gqlgen/graph/model"
@@ -364,7 +365,7 @@ func (r *queryResolver) DeliveryInfoByCityID(ctx context.Context, input *model.C
 				Slug: value.DeliveryMethod.Slug,
 			},
 			PaymentMethods: deliveryPaymentMethods(value.PaymentMethods),
-			Warehouses: deliveryWarehouses(value.Warehouses),
+			Warehouses:     deliveryWarehouses(value.Warehouses),
 		}
 	}
 
@@ -382,23 +383,23 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
-
 func deliveryWarehouses(w []entity.Warehouse) []*model.Warehouse {
-	
+
 	mw := make([]*model.Warehouse, len(w))
-	
+
 	for k, v := range w {
 		mw[k] = &model.Warehouse{
-			ID:      v.ID,
-			Name:    v.Name,
-			Address: v.Address,
-			Phone:   v.Phone,
+			ID:        v.ID,
+			Name:      v.Name,
+			Address:   v.Address,
+			Phone:     v.Phone,
+			Number:    v.Number,
+			MaxWeight: v.MaxWeight,
 		}
 	}
 
 	return mw
 }
-
 func deliveryPaymentMethods(p []entity.PaymentMethod) []*model.PaymentMethod {
 
 	pm := make([]*model.PaymentMethod, len(p))

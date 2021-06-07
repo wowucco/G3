@@ -216,6 +216,8 @@ type Warehouse {
   name: String!
   address: String!
   phone: String!
+  number: Int!
+  maxWeight: Int!
 }
 type DeliveryInfo {
   deliveryMethod: DeliveryMethod!

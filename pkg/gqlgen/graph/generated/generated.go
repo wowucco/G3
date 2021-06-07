@@ -236,10 +236,12 @@ type ComplexityRoot struct {
 	}
 
 	Warehouse struct {
-		Address func(childComplexity int) int
-		ID      func(childComplexity int) int
-		Name    func(childComplexity int) int
-		Phone   func(childComplexity int) int
+		Address   func(childComplexity int) int
+		ID        func(childComplexity int) int
+		MaxWeight func(childComplexity int) int
+		Name      func(childComplexity int) int
+		Number    func(childComplexity int) int
+		Phone     func(childComplexity int) int
 	}
 }
 
@@ -1224,12 +1226,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Warehouse.ID(childComplexity), true
 
+	case "Warehouse.maxWeight":
+		if e.complexity.Warehouse.MaxWeight == nil {
+			break
+		}
+
+		return e.complexity.Warehouse.MaxWeight(childComplexity), true
+
 	case "Warehouse.name":
 		if e.complexity.Warehouse.Name == nil {
 			break
 		}
 
 		return e.complexity.Warehouse.Name(childComplexity), true
+
+	case "Warehouse.number":
+		if e.complexity.Warehouse.Number == nil {
+			break
+		}
+
+		return e.complexity.Warehouse.Number(childComplexity), true
 
 	case "Warehouse.phone":
 		if e.complexity.Warehouse.Phone == nil {
@@ -1506,6 +1522,8 @@ type Warehouse {
   name: String!
   address: String!
   phone: String!
+  number: Int!
+  maxWeight: Int!
 }
 type DeliveryInfo {
   deliveryMethod: DeliveryMethod!
@@ -6320,6 +6338,76 @@ func (ec *executionContext) _Warehouse_phone(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Warehouse_number(ctx context.Context, field graphql.CollectedField, obj *model.Warehouse) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Warehouse",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Number, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Warehouse_maxWeight(ctx context.Context, field graphql.CollectedField, obj *model.Warehouse) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Warehouse",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxWeight, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -8885,6 +8973,16 @@ func (ec *executionContext) _Warehouse(ctx context.Context, sel ast.SelectionSet
 			}
 		case "phone":
 			out.Values[i] = ec._Warehouse_phone(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "number":
+			out.Values[i] = ec._Warehouse_number(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "maxWeight":
+			out.Values[i] = ec._Warehouse_maxWeight(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

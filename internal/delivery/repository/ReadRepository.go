@@ -78,7 +78,7 @@ func (d DeliveryReadRepository) getWarehousesForNovaposhtaByCity(ctx context.Con
 	if err != nil {
 		return make([]entity.Warehouse, 0), err
 	}
-	
+
 	if len(esr) > 0 {
 		return toWarehouseEntities(esr), nil
 	}
@@ -104,10 +104,12 @@ func toWarehouseEntities(npwh []NPWarehouse) []entity.Warehouse {
 
 	for k, v := range npwh {
 		w[k] = entity.Warehouse{
-			ID:      v.ID,
-			Name:    v.NameRu,
-			Address: v.ShortAddressRu,
-			Phone:   v.Phone,
+			ID:        v.ID,
+			Name:      v.NameRu,
+			Address:   v.ShortAddressRu,
+			Phone:     v.Phone,
+			Number:    v.Number,
+			MaxWeight: v.TotalMaxWeightAllowed,
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/wowucco/G3/internal/entity"
 	"log"
+	"strconv"
 )
 
 func (d NPDeliveryReadRepository) getWarehousesForNovaposhtaByCity(ctx context.Context, city entity.City) ([]NPWarehouse, error) {
@@ -32,6 +33,9 @@ func (d NPDeliveryReadRepository) getWarehousesForNovaposhtaByCity(ctx context.C
 
 	for k, warehouse := range result["data"].([]interface{}) {
 
+		t, _ := strconv.Atoi(fmt.Sprintf("%v", warehouse.(map[string]interface{})["totalMaxWeightAllowed"]))
+		n, _ := strconv.Atoi(fmt.Sprintf("%v", warehouse.(map[string]interface{})["number"]))
+
 		w[k] = NPWarehouse{
 			ID:                           fmt.Sprintf("%v", warehouse.(map[string]interface{})["Ref"]),
 			CityID:                       fmt.Sprintf("%v", warehouse.(map[string]interface{})["CityRef"]),
@@ -47,6 +51,8 @@ func (d NPDeliveryReadRepository) getWarehousesForNovaposhtaByCity(ctx context.C
 			SettlementAreaDescription:    fmt.Sprintf("%v", warehouse.(map[string]interface{})["SettlementAreaDescription"]),
 			SettlementRegionsDescription: fmt.Sprintf("%v", warehouse.(map[string]interface{})["SettlementRegionsDescription"]),
 			SettlementTypeDescription:    fmt.Sprintf("%v", warehouse.(map[string]interface{})["SettlementTypeDescription"]),
+			Number:                       n,
+			TotalMaxWeightAllowed:        t,
 		}
 	}
 

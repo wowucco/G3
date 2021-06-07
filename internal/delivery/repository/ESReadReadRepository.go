@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/wowucco/G3/internal/entity"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -169,7 +170,18 @@ func (d ESDeliveryReadRepository) getWarehousesForNovaposhtaByCity(ctx context.C
 			"nameRu",
 			"shortAddressRu",
 			"phone",
+			"number",
+			"totalMaxWeightAllowed",
 		},
+		//"sort": []interface{}{
+		//	map[string]interface{}{
+		//		"id": []interface{}{
+		//			map[string]string{
+		//				"order": "asc",
+		//			},
+		//		},
+		//	},
+		//},
 		"query": map[string]interface{}{
 			"match": map[string]interface{}{
 				"cityId": map[string]string{
@@ -230,6 +242,8 @@ func (d ESDeliveryReadRepository) getWarehousesForNovaposhtaByCity(ctx context.C
 		return nil, err
 	}
 
+
+
 	if err != nil {
 		log.Fatalf("Error encoding query: %s", err)
 		return nil, err
@@ -239,6 +253,9 @@ func (d ESDeliveryReadRepository) getWarehousesForNovaposhtaByCity(ctx context.C
 	warehouses := make([]NPWarehouse, len(result["hits"].(map[string]interface{})["hits"].([]interface{})))
 
 	for _, hit := range result["hits"].(map[string]interface{})["hits"].([]interface{}) {
+
+		t, _ := strconv.Atoi(fmt.Sprintf("%v", hit.(map[string]interface{})["_source"].(map[string]interface{})["totalMaxWeightAllowed"]))
+		n, _ := strconv.Atoi(fmt.Sprintf("%v", hit.(map[string]interface{})["_source"].(map[string]interface{})["number"]))
 
 		warehouses[i] = NPWarehouse{
 			ID:                           fmt.Sprintf("%v", hit.(map[string]interface{})["_source"].(map[string]interface{})["id"]),
@@ -255,7 +272,11 @@ func (d ESDeliveryReadRepository) getWarehousesForNovaposhtaByCity(ctx context.C
 			SettlementAreaDescription:    fmt.Sprintf("%v", hit.(map[string]interface{})["_source"].(map[string]interface{})["settlementAreaDescription"]),
 			SettlementRegionsDescription: fmt.Sprintf("%v", hit.(map[string]interface{})["_source"].(map[string]interface{})["settlementRegionsDescription"]),
 			SettlementTypeDescription:    fmt.Sprintf("%v", hit.(map[string]interface{})["_source"].(map[string]interface{})["settlementTypeDescription"]),
+			Number:                       n,
+			TotalMaxWeightAllowed:        t,
 		}
+
+		log.Printf("Error getting response: %v\n", warehouses[i])
 
 		i++
 	}
@@ -265,29 +286,11 @@ func (d ESDeliveryReadRepository) getWarehousesForNovaposhtaByCity(ctx context.C
 
 func (d ESDeliveryReadRepository) indexCitiesWarehouses(city entity.City, warehouses []NPWarehouse) error {
 
-
 	for _, warehouse := range warehouses {
-
-		body := map[string]string{
-			"id":                           warehouse.ID,
-			"cityId":                       warehouse.CityID,
-			"name":                         warehouse.Name,
-			"nameRu":                       warehouse.NameRu,
-			"shortAddress":                 warehouse.ShortAddress,
-			"shortAddressRu":               warehouse.ShortAddressRu,
-			"phone":                        warehouse.Phone,
-			"cityDescription":              warehouse.CityDescription,
-			"cityDescriptionRu":            warehouse.CityDescriptionRu,
-			"settlementRef":                warehouse.SettlementRef,
-			"settlementDescription":        warehouse.SettlementDescription,
-			"settlementAreaDescription":    warehouse.SettlementAreaDescription,
-			"settlementRegionsDescription": warehouse.SettlementRegionsDescription,
-			"settlementTypeDescription":    warehouse.SettlementTypeDescription,
-		}
 
 		var buf bytes.Buffer
 
-		if err := json.NewEncoder(&buf).Encode(body); err != nil {
+		if err := json.NewEncoder(&buf).Encode(warehouse); err != nil {
 			log.Fatalf("Error encoding query: %s", err)
 			return err
 		}

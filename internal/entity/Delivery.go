@@ -43,8 +43,10 @@ func (d DeliveryMethod) GetSlug() string {
 }
 
 type Warehouse struct {
-	ID      string
-	Name    string
-	Address string
-	Phone   string
+	ID        string
+	Name      string
+	Address   string
+	Phone     string
+	Number    int
+	MaxWeight int
 }

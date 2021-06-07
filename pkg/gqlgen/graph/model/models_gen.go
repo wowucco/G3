@@ -182,10 +182,12 @@ type Unit struct {
 }
 
 type Warehouse struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Address string `json:"address"`
-	Phone   string `json:"phone"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Address   string `json:"address"`
+	Phone     string `json:"phone"`
+	Number    int    `json:"number"`
+	MaxWeight int    `json:"maxWeight"`
 }
 
 type CityID struct {
