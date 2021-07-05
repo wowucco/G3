@@ -136,6 +136,42 @@ func (h *Handler) acceptHolden(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
+func (h *Handler) orderInfo(c *gin.Context) {
+	b, err := ioutil.ReadAll(c.Request.Body)
+
+	if err != nil {
+		log.Printf("[error][order info request][read body][%v]", err)
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	var form OrderIdForm
+
+	if err := json.Unmarshal(b, &form); err != nil {
+		log.Printf("[error][order info request][decode body][%v]", err)
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	err = form.Validate()
+
+	if err != nil {
+		log.Printf("[error][order info request][validate][%v]", err)
+		c.JSON(http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	order, err := h.orderManage.OrderInfo(c, form)
+
+	if err != nil {
+		log.Printf("[error][order info request][get order][%v]", err)
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, NewOrderInfoResponse(order))
+}
+
 func (h *Handler) callback(c *gin.Context) {
 
 	provider := c.Param("provider")
@@ -146,10 +182,10 @@ func (h *Handler) callback(c *gin.Context) {
 	_, err := h.orderManage.ProviderCallback(c, form)
 
 	if err != nil {
-		log.Printf("error: %v", err)
+		log.Printf("[error][provider callback][handle][%v]", err)
+		c.JSON(http.StatusFailedDependency, gin.H{})
+		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"provider": provider,
-	})
+	c.JSON(http.StatusOK, gin.H{})
 }

@@ -91,6 +91,10 @@ func (o *OrderUserCase) Create(ctx context.Context, form checkout.CreateOrderFor
 	return order, nil
 }
 
+func (o *OrderUserCase) OrderInfo(ctx context.Context, form checkout.OrderIdForm) (*entity.Order, error) {
+	return o.orderRepository.Get(ctx, form.GetOrderId())
+}
+
 func (o *OrderUserCase) InitPayment(ctx context.Context, form checkout.InitPaymentForm) (checkout.IInitPaymentResponse, error) {
 
 	order, err := o.orderRepository.Get(ctx, form.GetOrderId())

@@ -14,6 +14,7 @@ func RegisterHTTPEndpoints(router *gin.RouterGroup, ordUC checkout.IOrderUseCase
 		c.POST("create", h.create)
 		c.POST("init-payment", h.initPayment)
 		c.POST("accept-holden-payment", h.acceptHolden)
+		c.POST("order-info", h.orderInfo)
 	}
 
 	cb := router.Group("/callback")

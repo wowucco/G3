@@ -22,6 +22,7 @@ type IProviderCallbackPaymentResponse interface {
 
 type IOrderUseCase interface {
 	Create(ctx context.Context, form CreateOrderForm) (*entity.Order, error)
+	OrderInfo(ctx context.Context, form OrderIdForm) (*entity.Order, error)
 	InitPayment(ctx context.Context, form InitPaymentForm) (IInitPaymentResponse, error)
 	AcceptHoldenPayment(ctx context.Context, form IAcceptHoldenPaymentForm) error
 	ProviderCallback(ctx *gin.Context, form IProviderCallbackPaymentForm) (IProviderCallbackPaymentResponse, error)

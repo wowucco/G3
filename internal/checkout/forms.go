@@ -55,6 +55,10 @@ type InitPaymentForm interface {
 	GetOrderId() int
 }
 
+type OrderIdForm interface {
+	GetOrderId() int
+}
+
 type IAcceptHoldenPaymentForm interface {
 	GetTransactionId() string
 }

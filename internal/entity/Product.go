@@ -112,6 +112,10 @@ type Currency struct {
 	ISO  string
 }
 
+func (c Currency) GetName() string {
+	return c.Name
+}
+
 func (c *Currency) IsBase() bool {
 	if c.ISO == baseCurrency {
 		return true
@@ -144,6 +148,9 @@ type Price struct {
 	Currency  Currency
 }
 
+func (p *Price) GetCurrency() Currency {
+	return p.Currency
+}
 func (p *Price) GetInCent() int {
 	return p.Price
 }

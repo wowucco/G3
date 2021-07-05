@@ -216,7 +216,7 @@ type CreateOrder struct {
 	Order    Order    `json:"order"`
 
 	Comment   string `json:"comment"`
-	DoNotCall bool `json:"do_not_call"`
+	DoNotCall bool   `json:"do_not_call"`
 }
 
 func (c CreateOrder) GetDelivery() checkout.DeliveryForm {
@@ -258,9 +258,124 @@ func NewCreateOrderResponse(order *entity.Order) *OrderResponse {
 		Created: order.GetCreated(),
 	}
 }
+
 type OrderResponse struct {
-	OrderId int	`json:"order_id"`
+	OrderId int   `json:"order_id"`
 	Created int64 `json:"created"`
+}
+
+func NewOrderInfoResponse(order *entity.Order) *OrderInfoResponse {
+
+	oPrice := order.GetPrice()
+	items := make([]OrderProductInfoResponse, len(order.GetItems()))
+
+	for k, v := range order.GetItems() {
+
+		iPrice := v.GetPrice()
+		pPrice := v.GetProduct().Price
+		items[k] = OrderProductInfoResponse{
+			Quantity: v.GetQuantity(),
+			TotalPrice: PriceInfoResponse{
+				InCent:     iPrice.GetInCent(),
+				InCurrency: iPrice.CentToCurrency(),
+				Currency:   iPrice.GetCurrency().GetName(),
+			},
+			Product: SimpleProductInfoResponse{
+				ID:     v.GetProduct().ID,
+				Name:   v.GetProduct().Name,
+				Code:   v.GetProduct().Code,
+				Exist:  v.GetProduct().Exist,
+				Status: v.GetProduct().Status,
+				Price: PriceInfoResponse{
+					InCent:     pPrice.GetInCent(),
+					InCurrency: pPrice.CentToCurrency(),
+					Currency:   pPrice.GetCurrency().GetName(),
+				},
+			},
+		}
+	}
+
+	return &OrderInfoResponse{
+		OrderId:   order.GetId(),
+		Created:   order.GetCreated(),
+		Comment:   order.GetComment(),
+		DoNotCall: order.GetDoNotCall(),
+		Cost: PriceInfoResponse{
+			InCent:     oPrice.GetInCent(),
+			InCurrency: oPrice.CentToCurrency(),
+			Currency:   oPrice.GetCurrency().GetName(),
+		},
+		Client: ClientInfoResponse{
+			Fio:   order.GetCustomer().GetName(),
+			Phone: order.GetCustomer().GetPhone(),
+		},
+		Delivery: DeliveryInfoResponse{
+			Method:    order.GetDelivery().GetMethod().GetName(),
+			Slug:      order.GetDelivery().GetMethod().GetSlug(),
+			Status:    order.GetDelivery().GetStatus(),
+			City:      order.GetDelivery().GetWarehouse().GetCity().GetName(),
+			CityId:    order.GetDelivery().GetWarehouse().GetCity().GetId(),
+			Address:   order.GetDelivery().GetWarehouse().GetAddress().GetName(),
+			AddressId: order.GetDelivery().GetWarehouse().GetAddress().GetId(),
+			IsCustom:  order.GetDelivery().GetWarehouse().GetAddress().IsCustom(),
+		},
+		Payment: PaymentInfoResponse{
+			Method: order.GetPayment().GetMethod().GetName(),
+			Slug:   order.GetPayment().GetMethod().GetSlug(),
+			Status: order.GetPayment().GetStatus(),
+		},
+		Items: items,
+	}
+}
+
+type DeliveryInfoResponse struct {
+	Method    string `json:"method"`
+	Slug      string `json:"slug"`
+	Status    int    `json:"status"`
+	City      string `json:"city"`
+	CityId    string `json:"city_id"`
+	Address   string `json:"address"`
+	AddressId string `json:"address_id"`
+	IsCustom  bool   `json:"is_custom"`
+}
+type PaymentInfoResponse struct {
+	Method string `json:"method"`
+	Slug   string `json:"slug"`
+	Status int    `json:"status"`
+}
+type ClientInfoResponse struct {
+	Fio   string `json:"fio"`
+	Phone string `json:"phone"`
+}
+type PriceInfoResponse struct {
+	InCent     int    `json:"in_cent"`
+	InCurrency string `json:"in_currency"`
+	Currency   string `json:"currency"`
+}
+type OrderProductInfoResponse struct {
+	Quantity   int                       `json:"quantity,omitempty"`
+	TotalPrice PriceInfoResponse         `json:"total_price"`
+	Product    SimpleProductInfoResponse `json:"product"`
+}
+type SimpleProductInfoResponse struct {
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	Code   int    `json:"code"`
+	Exist  int    `json:"exist"`
+	Status int    `json:"status"`
+
+	Price PriceInfoResponse `json:"price"`
+}
+type OrderInfoResponse struct {
+	OrderId   int                        `json:"order_id"`
+	Created   int64                      `json:"created"`
+	Comment   string                     `json:"comment"`
+	DoNotCall bool                       `json:"do_not_call"`
+	Cost      PriceInfoResponse          `json:"total_cost"`
+	Client    ClientInfoResponse         `json:"client"`
+	Delivery  DeliveryInfoResponse       `json:"delivery"`
+	Payment   PaymentInfoResponse        `json:"payment"`
+	Items     []OrderProductInfoResponse `json:"items"`
 }
 
 type InitPaymentForm struct {
@@ -271,6 +386,17 @@ func (f InitPaymentForm) GetOrderId() int {
 	return f.OrderId
 }
 func (f InitPaymentForm) Validate() error {
+	return validation.ValidateStruct(&f, validation.Field(&f.OrderId, validation.Required, validation.Min(1)))
+}
+
+type OrderIdForm struct {
+	OrderId int `json:"order_id"`
+}
+
+func (f OrderIdForm) GetOrderId() int {
+	return f.OrderId
+}
+func (f OrderIdForm) Validate() error {
 	return validation.ValidateStruct(&f, validation.Field(&f.OrderId, validation.Required, validation.Min(1)))
 }
 
@@ -292,4 +418,3 @@ type ProviderCallbackPaymentForm struct {
 func (f ProviderCallbackPaymentForm) GetProvider() string {
 	return f.Provider
 }
-
