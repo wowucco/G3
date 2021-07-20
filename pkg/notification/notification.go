@@ -100,6 +100,16 @@ func (s *Service) PaymentStatusUpdated(order *entity.Order, payment *entity.Paym
 	}
 }
 
+func (s *Service) Recall(phone, message string) {
+
+	if message == "" {
+		message = "message is empty"
+	}
+	
+	msg := fmt.Sprintf("*Phone*\n%s\n*Message*\n%s\n", phone, message)
+	s.telegramSend(s.telegramChats[TelegramRecallChat], msg)
+}
+
 func (s *Service) makeLinkToOrder(o *entity.Order) string {
 	return fmt.Sprintf(s.boOrderLinkMask, o.GetId())
 }

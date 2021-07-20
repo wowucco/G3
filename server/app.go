@@ -14,6 +14,9 @@ import (
 	"github.com/wowucco/G3/internal/checkout/repository"
 	"github.com/wowucco/G3/internal/checkout/strategy"
 	"github.com/wowucco/G3/internal/checkout/usecase"
+	"github.com/wowucco/G3/internal/contact"
+	contactHttp "github.com/wowucco/G3/internal/contact/delivery/http"
+	contactUC "github.com/wowucco/G3/internal/contact/usecases"
 	"github.com/wowucco/G3/internal/delivery"
 	_deliveryRepo "github.com/wowucco/G3/internal/delivery/repository"
 	"github.com/wowucco/G3/internal/menu"
@@ -49,6 +52,8 @@ type App struct {
 
 	orderManage checkout.IOrderUseCase
 
+	contactManage contact.IContactUseCase
+
 	db *dbx.DB
 	es *elasticsearch.Client
 
@@ -70,6 +75,8 @@ func NewApp() *App {
 	smsChan := make(chan sms.Message, 1)
 	telegramChan := make(chan telegram2.Message, 1)
 
+	notify := initNotificationService(smsChan, telegramChan)
+
 	return &App{
 		db: db,
 		es: es,
@@ -84,9 +91,11 @@ func NewApp() *App {
 			productRead,
 			deliveryRead,
 			repository.NewPaymentRepository(db),
-			initNotificationService(smsChan, telegramChan),
+			notify,
 			initPaymentContext(db),
 		),
+
+		contactManage: contactUC.NewContactUseCase(notify),
 
 		smsChan:      smsChan,
 		telegramChan: telegramChan,
@@ -112,6 +121,8 @@ func (app *App) Run(port string) error {
 
 	productHttp.RegisterHTTPEndpoints(api, app.productUC, platformAuth)
 	checkoutHttp.RegisterHTTPEndpoints(api, app.orderManage, platformAuth)
+	contactHttp.RegisterHTTPEndpoints(api, platformAuth, app.contactManage)
+
 	graph.RegisterGraphql(api, app.productUC, app.productRead, app.menuRead, app.deliveryRead)
 
 	app.httpServer = &http.Server{
