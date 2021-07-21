@@ -54,3 +54,39 @@ func (h *Handler) recall(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{})
 }
+
+func (h *Handler) buyOnClick(c *gin.Context) {
+	b, err := ioutil.ReadAll(c.Request.Body)
+
+	if err != nil {
+		log.Printf("[error][contact buy-on-click request][read body][%v]", err)
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	var form BuyOnClickForm
+
+	if err := json.Unmarshal(b, &form); err != nil {
+		log.Printf("[error][contact buy-on-click request][decode body][%v]", err)
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	err = form.Validate()
+
+	if err != nil {
+		log.Printf("[error][contact buy-on-click request][validate][%v]", err)
+		c.JSON(http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	err = h.contactManage.BuyOnClick(c, form)
+
+	if err != nil {
+		log.Printf("[error][contact buy-on-click request][buy-on-click][%v]", err)
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{})
+}

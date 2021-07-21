@@ -95,7 +95,7 @@ func NewApp() *App {
 			initPaymentContext(db),
 		),
 
-		contactManage: contactUC.NewContactUseCase(notify),
+		contactManage: contactUC.NewContactUseCase(notify, productRepo),
 
 		smsChan:      smsChan,
 		telegramChan: telegramChan,

@@ -14,5 +14,6 @@ func RegisterHTTPEndpoints(router *gin.RouterGroup, platformAuth gin.HandlerFunc
 
 	{
 		c.POST("recall", h.recall)
+		c.POST("buy-on-click", h.buyOnClick)
 	}
 }

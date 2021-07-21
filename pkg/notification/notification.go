@@ -110,6 +110,19 @@ func (s *Service) Recall(phone, message string) {
 	s.telegramSend(s.telegramChats[TelegramRecallChat], msg)
 }
 
+func (s *Service) BuyOnClick(phone string, product entity.Product) {
+
+	telegramMessage := "*Buy on click request*"
+	telegramMessage += fmt.Sprintf("\n_Customer_\n%s\n", phone)
+	telegramMessage += "\n_Item_\n"
+	telegramMessage += fmt.Sprintf("[%s](%s)\n", product.Name, s.makeLinkToProduct(product.ID))
+
+	cost := product.Price
+	telegramMessage += fmt.Sprintf("_cost: _%s_\n", (&cost).CentToCurrency())
+	
+	s.telegramSend(s.telegramChats[TelegramOrderChat], telegramMessage)
+}
+
 func (s *Service) makeLinkToOrder(o *entity.Order) string {
 	return fmt.Sprintf(s.boOrderLinkMask, o.GetId())
 }
