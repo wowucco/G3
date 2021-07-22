@@ -120,7 +120,7 @@ func (s *Service) BuyOnClick(phone string, product entity.Product) {
 	cost := product.Price
 	telegramMessage += fmt.Sprintf("_cost:_ _%s_\n", (&cost).CentToCurrency())
 
-	s.telegramSend(s.telegramChats[TelegramRecallChat], telegramMessage)
+	s.telegramSend(s.telegramChats[TelegramOrderChat], telegramMessage)
 }
 
 func (s *Service) makeLinkToOrder(o *entity.Order) string {
